@@ -732,18 +732,6 @@
  .num-input:focus {
  border-color: var(--accent);
  }
- .stepper-input {
- width: 54px;
- height: 34px;
- padding: 4px 6px;
- font-weight: 700;
- -moz-appearance: textfield;
- }
- .stepper-input::-webkit-outer-spin-button,
- .stepper-input::-webkit-inner-spin-button {
- -webkit-appearance: none;
- margin: 0;
- }
  .icon-btn {
  width: 34px; height: 34px;
  border-radius: 8px;
@@ -1009,7 +997,7 @@ function sortCardsByGroups(gameObj) {
  });
 }
 
-// Viešo katalogo baziniai žaidimai
+// Viešo katalogo baziniai žaidimai (be default rolių skaičiaus)
 const PUBLIC_CATALOG_RAW = [
  {
  title: "AmongAI",
@@ -1020,14 +1008,14 @@ const PUBLIC_CATALOG_RAW = [
  { id: "g3", title: "Speciali rolė", color: "amber" }
  ],
  cards: [
- { id: "c1", title: "Žmogus", groupId: "g1", count: 5 },
- { id: "c2", title: "Gydytojas", groupId: "g1", count: 1 },
- { id: "c3", title: "Teisėjas", groupId: "g1", count: 1 },
- { id: "c4", title: "Policininkas", groupId: "g1", count: 1 },
- { id: "c5", title: "Imposteris", groupId: "g2", count: 2 },
- { id: "c6", title: "Trintukas", groupId: "g2", count: 1 },
- { id: "c7", title: "Ligonis", groupId: "g2", count: 1 },
- { id: "c8", title: "Džakalas", groupId: "g3", count: 1 }
+ { id: "c1", title: "Žmogus", groupId: "g1" },
+ { id: "c2", title: "Gydytojas", groupId: "g1" },
+ { id: "c3", title: "Teisėjas", groupId: "g1" },
+ { id: "c4", title: "Policininkas", groupId: "g1" },
+ { id: "c5", title: "Imposteris", groupId: "g2" },
+ { id: "c6", title: "Trintukas", groupId: "g2" },
+ { id: "c7", title: "Ligonis", groupId: "g2" },
+ { id: "c8", title: "Džakalas", groupId: "g3" }
  ],
  phases: [
  { id: "p1", title: "Susipažinimas", color: "purple", loop: false, duration: 20, fxAlarm: false },
@@ -1048,11 +1036,11 @@ const PUBLIC_CATALOG_RAW = [
  { id: "g2", title: "Miestiečiai", color: "blue" }
  ],
  cards: [
- { id: "c1", title: "Mafija", groupId: "g1", count: 2 },
- { id: "c2", title: "Donas", groupId: "g1", count: 1 },
- { id: "c3", title: "Komisaras", groupId: "g2", count: 1 },
- { id: "c4", title: "Gydytojas", groupId: "g2", count: 1 },
- { id: "c5", title: "Miestietis", groupId: "g2", count: 6 }
+ { id: "c1", title: "Mafija", groupId: "g1" },
+ { id: "c2", title: "Donas", groupId: "g1" },
+ { id: "c3", title: "Komisaras", groupId: "g2" },
+ { id: "c4", title: "Gydytojas", groupId: "g2" },
+ { id: "c5", title: "Miestietis", groupId: "g2" }
  ],
  phases: [
  { id: "p1", title: "Susipažinimo naktis", color: "purple", loop: false, duration: 30, fxAlarm: false },
@@ -1072,8 +1060,8 @@ const PUBLIC_CATALOG_RAW = [
  { id: "g2", title: "Agentai", color: "emerald" }
  ],
  cards: [
- { id: "c1", title: "Šnipas", groupId: "g1", count: 1 },
- { id: "c2", title: "Agentas", groupId: "g2", count: 6 }
+ { id: "c1", title: "Šnipas", groupId: "g1" },
+ { id: "c2", title: "Agentas", groupId: "g2" }
  ],
  phases: [
  { id: "p1", title: "Apklausa", color: "emerald", loop: false, duration: 300, fxAlarm: true }
@@ -1098,8 +1086,7 @@ function normalizeGameObject(g) {
  copy.cards = Array.isArray(copy.cards) ? copy.cards.map((c, i) => ({
  id: c.id || `c_${i + 1}`,
  title: c.title ?? "Rolė",
- groupId: validGroupIds.has(c.groupId) ? c.groupId : "",
- count: Math.max(0, Number(c.count) || 0)
+ groupId: validGroupIds.has(c.groupId) ? c.groupId : ""
  })) : [];
  sortCardsByGroups(copy);
  copy.phases = Array.isArray(copy.phases) ? copy.phases.map((p, i) => ({
@@ -1138,8 +1125,7 @@ function computeCanonicalHash(gameObj) {
  })),
  cards: (gameObj.cards || []).map(c => ({
  title: (c.title || "").trim(),
- groupIdx: groupIndexMap.has(c.groupId) ? groupIndexMap.get(c.groupId) : -1,
- count: Math.max(0, Number(c.count) || 0)
+ groupIdx: groupIndexMap.has(c.groupId) ? groupIndexMap.get(c.groupId) : -1
  })),
  phases: (gameObj.phases || []).map(p => ({
  title: (p.title || "").trim(),
@@ -1175,7 +1161,6 @@ function gameToPositionalArray(g) {
  ]),
  (g.cards || []).map(c => [
  (c.title || "").trim(),
- Math.max(0, Number(c.count) || 0),
  groupIndexMap.has(c.groupId) ? groupIndexMap.get(c.groupId) : -1
  ]),
  (g.phases || []).map(p => [
@@ -1213,7 +1198,6 @@ function positionalArrayToGame(arr) {
  return {
  id: `c_${i + 1}`,
  title: String(c[0] || "Rolė"),
- count: Math.max(0, Number(c[2]) || 0),
  groupId: grpIdx !== -1 ? groups[grpIdx].id : ""
  };
  }) : [],
@@ -1247,14 +1231,14 @@ function positionalArrayToGame(arr) {
  color: COLOR_KEYS[arr[1]] || "blue",
  groups,
  cards: Array.isArray(arr[3]) ? arr[3].map((c, i) => {
- const isFourTuple = c.length >= 4;
- const countVal = isFourTuple ? c[2] : c[1];
- const rawGrpIdx = isFourTuple ? c[3] : c[2];
+ let rawGrpIdx = -1;
+ if (c.length >= 4) rawGrpIdx = c[3];
+ else if (c.length === 3) rawGrpIdx = c[2];
+ else if (c.length === 2) rawGrpIdx = c[1];
  const grpIdx = (Number.isInteger(rawGrpIdx) && rawGrpIdx >= 0 && groups[rawGrpIdx]) ? rawGrpIdx : -1;
  return {
  id: `c_${i + 1}`,
  title: String(c[0] || "Rolė"),
- count: Math.max(0, Number(countVal) || 0),
  groupId: grpIdx !== -1 ? groups[grpIdx].id : ""
  };
  }) : [],
@@ -1423,13 +1407,13 @@ const SessionStore = {
  if (entry && entry.customCounts) {
  (gameObj.cards || []).forEach(c => {
  const val = entry.customCounts[c.id];
- counts[c.id] = (typeof val === 'number' && val >= 0) ? val : c.count;
+ counts[c.id] = (typeof val === 'number' && val >= 0) ? val : 0;
  });
  return { customCounts: counts };
  }
 
  (gameObj.cards || []).forEach(c => {
- counts[c.id] = c.count;
+ counts[c.id] = 0;
  });
  return { customCounts: counts };
  },
@@ -1705,7 +1689,7 @@ const state = {
  // Ar atidarytas žaidimas laikomas viešo katalogo žaidimu (ar custom / per nuorodą)
  currentGameIsPublic: true,
 
- // 3.A Sesijos atmintis (atstatoma iš localStorage su TTL)
+ // 3.A Sesijos atmintis (atstatoma iš localStorage su TTL, pagal nutylėjimą 0)
  customCounts: {},
 
  // 2. Redaktoriaus laikinas juodraštis
@@ -2091,7 +2075,7 @@ async function shareCurrentGame(e) {
 // PAGALBINĖS FUNKCIJOS IR APSAUGOS BARJERAS
 // ============================================================================
 function getCustomDeckSize() {
- return (BASE_GAME.cards || []).reduce((sum, c) => sum + (state.customCounts[c.id] ?? c.count), 0);
+ return (BASE_GAME.cards || []).reduce((sum, c) => sum + (state.customCounts[c.id] ?? 0), 0);
 }
 
 function setAccent(colorKey) {
@@ -2238,25 +2222,10 @@ function addCardInEditor(e) {
  cards.push({
  id: uid('c'),
  title: 'Nauja rolė',
- groupId: inheritedGroupId,
- count: 1
+ groupId: inheritedGroupId
  });
  updateDraftHashBadge();
  render();
-}
-
-function adjustEditorCardCount(cardIndex, delta) {
- if (!state.editorDraft || !state.editorDraft.cards[cardIndex]) return;
- Haptics.tap();
- const card = state.editorDraft.cards[cardIndex];
- card.count = Math.max(0, (Number(card.count) || 0) + delta);
- updateDraftHashBadge();
- const countEl = document.getElementById(`editor-card-count-${cardIndex}`);
- if (countEl) {
- countEl.value = card.count;
- } else {
- render();
- }
 }
 
 function cycleCardGroupInEditor(cardIndex) {
@@ -2375,7 +2344,7 @@ async function saveEditorChanges() {
 function buildSessionDeck() {
  const raw = [];
  (BASE_GAME.cards || []).forEach(c => {
- const qty = state.customCounts[c.id] ?? c.count;
+ const qty = state.customCounts[c.id] ?? 0;
  for (let i = 0; i < qty; i++) {
  raw.push({ ...c });
  }
@@ -2633,7 +2602,7 @@ function escapeHtml(str) {
 }
 
 // ============================================================================
-// ATVAIZDAVIMAS (RENDER)
+// ATVAIZDAVIMAS (RENDER) SU SLINKTIES POZICIJOS IŠSAUGOJIMU
 // ============================================================================
 function renderTimerOnly() {
  const el = document.getElementById('timer-val');
@@ -2675,6 +2644,15 @@ function renderCatalogRowFavOnly(g, forceStarActive = false, extraOptions = null
 
 function render() {
  const app = document.getElementById('app');
+
+ // Išsaugome vidinių slenkamų sričių pozicijas prieš atnaujinant DOM
+ const prevEditorWrap = app.querySelector('.editor-wrap');
+ const prevCardList = app.querySelector('.card-list');
+ const prevCatalogPanel = app.querySelector('.catalog-panel');
+ const savedEditorScroll = prevEditorWrap ? prevEditorWrap.scrollTop : 0;
+ const savedCardListScroll = prevCardList ? prevCardList.scrollTop : 0;
+ const savedCatalogScroll = prevCatalogPanel ? prevCatalogPanel.scrollTop : 0;
+
  const hasCards = BASE_GAME.cards && BASE_GAME.cards.length > 0;
  const hasPhasesOrFinals = (BASE_GAME.phases && BASE_GAME.phases.length > 0) ||
  (BASE_GAME.finals && BASE_GAME.finals.length > 0);
@@ -2756,6 +2734,10 @@ function render() {
 
  <div class="bottom-bar"></div>
  `;
+ const nextCatalogPanel = app.querySelector('.catalog-panel');
+ if (nextCatalogPanel && savedCatalogScroll > 0) {
+ nextCatalogPanel.scrollTop = savedCatalogScroll;
+ }
  return;
  }
 
@@ -2782,7 +2764,7 @@ function render() {
  </div>
  <div class="stepper">
  <button class="sm" onclick="adjustCustomCount('${c.id}', -1)"><i class="fa-solid fa-minus"></i></button>
- <span>${state.customCounts[c.id] ?? c.count}</span>
+ <span>${state.customCounts[c.id] ?? 0}</span>
  <button class="sm" onclick="adjustCustomCount('${c.id}', 1)"><i class="fa-solid fa-plus"></i></button>
  </div>
  </div>
@@ -2831,6 +2813,10 @@ function render() {
  </div>
  </div>
  `;
+ const nextCardList = app.querySelector('.card-list');
+ if (nextCardList && savedCardListScroll > 0) {
+ nextCardList.scrollTop = savedCardListScroll;
+ }
  return;
  }
 
@@ -2843,6 +2829,7 @@ function render() {
  const paletteHtml = COLOR_KEYS.map(ck => `
  <div class="color-swatch ${d.color === ck ? 'selected' : ''}"
  style="background: ${PALETTE[ck]}; color: ${PALETTE[ck]}"
+ onpointerdown="event.preventDefault()"
  onclick="Haptics.tap(); state.editorDraft.color='${ck}'; setAccent('${ck}'); updateDraftHashBadge(); render();"></div>
  `).join('');
 
@@ -2855,6 +2842,7 @@ function render() {
  <div class="editor-item-main">
  <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[grp.color]}"
+ onpointerdown="event.preventDefault()"
  onclick="Haptics.tap(); state.editorDraft.groups[${i}].color = cycleItemColor('${grp.color}'); updateDraftHashBadge(); render();">
  ${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}
  </div>
@@ -2862,7 +2850,7 @@ function render() {
  value="${escapeHtml(grp.title)}"
  placeholder="Grupės pavadinimas"
  oninput="state.editorDraft.groups[${i}].title = this.value; updateDraftHashBadge();" />
- <button class="icon-btn del" onclick="deleteGroupInEditor(${i})"><i class="fa-solid fa-trash"></i></button>
+ <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="deleteGroupInEditor(${i})"><i class="fa-solid fa-trash"></i></button>
  </div>
  </div>
  `;
@@ -2881,6 +2869,7 @@ function render() {
  <div class="color-cycle-btn ${isNoneResolved ? 'is-none' : ''} ${isWhiteResolved ? 'is-white' : ''}"
  title="${grp ? escapeHtml(grp.title) : 'Be grupės'}"
  style="background: ${isNoneResolved ? 'transparent' : PALETTE[resolvedColorKey]}"
+ onpointerdown="event.preventDefault()"
  onclick="cycleCardGroupInEditor(${i})">
  <i class="fa-solid fa-user-group"></i>
  </div>
@@ -2888,17 +2877,7 @@ function render() {
  value="${escapeHtml(c.title)}"
  placeholder="Rolės pavadinimas"
  oninput="state.editorDraft.cards[${i}].title = this.value; updateDraftHashBadge();" />
- </div>
- <div class="editor-item-subrow">
- <div class="stepper">
- <button class="icon-btn" onclick="adjustEditorCardCount(${i}, -1)"><i class="fa-solid fa-minus"></i></button>
- <input type="number" min="0" class="num-input stepper-input"
- id="editor-card-count-${i}"
- value="${c.count}"
- oninput="state.editorDraft.cards[${i}].count = Math.max(0, parseInt(this.value, 10) || 0); updateDraftHashBadge();" />
- <button class="icon-btn" onclick="adjustEditorCardCount(${i}, 1)"><i class="fa-solid fa-plus"></i></button>
- </div>
- <button class="icon-btn del" onclick="Haptics.tap(); state.editorDraft.cards.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
+ <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.cards.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
  </div>
  </div>
  `;
@@ -2913,6 +2892,7 @@ function render() {
  <div class="editor-item-main">
  <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[p.color]}"
+ onpointerdown="event.preventDefault()"
  onclick="Haptics.tap(); state.editorDraft.phases[${i}].color = cycleItemColor('${p.color}'); updateDraftHashBadge(); render();">
  ${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}
  </div>
@@ -2930,16 +2910,18 @@ function render() {
  </div>
  <div class="toggle-group">
  <button class="icon-btn ${p.loop ? 'active-toggle' : ''}"
+ onpointerdown="event.preventDefault()"
  onclick="Haptics.tap(); state.editorDraft.phases[${i}].loop = !state.editorDraft.phases[${i}].loop; updateDraftHashBadge(); render();">
  <i class="fa-solid fa-repeat"></i>
  </button>
  <button class="icon-btn ${p.fxAlarm ? 'active-toggle' : ''}"
+ onpointerdown="event.preventDefault()"
  onclick="Haptics.tap(); state.editorDraft.phases[${i}].fxAlarm = !state.editorDraft.phases[${i}].fxAlarm; updateDraftHashBadge(); render();">
  <i class="fa-solid fa-bullhorn"></i>
  </button>
- <button class="icon-btn" onclick="moveItem(state.editorDraft.phases, ${i}, -1)"><i class="fa-solid fa-chevron-up"></i></button>
- <button class="icon-btn" onclick="moveItem(state.editorDraft.phases, ${i}, 1)"><i class="fa-solid fa-chevron-down"></i></button>
- <button class="icon-btn del" onclick="Haptics.tap(); state.editorDraft.phases.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
+ <button class="icon-btn" onpointerdown="event.preventDefault()" onclick="moveItem(state.editorDraft.phases, ${i}, -1)"><i class="fa-solid fa-chevron-up"></i></button>
+ <button class="icon-btn" onpointerdown="event.preventDefault()" onclick="moveItem(state.editorDraft.phases, ${i}, 1)"><i class="fa-solid fa-chevron-down"></i></button>
+ <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
  </div>
  </div>
  </div>
@@ -2955,6 +2937,7 @@ function render() {
  <div class="editor-item-main">
  <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[f.color]}"
+ onpointerdown="event.preventDefault()"
  onclick="Haptics.tap(); state.editorDraft.finals[${i}].color = cycleItemColor('${f.color}'); updateDraftHashBadge(); render();">
  ${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}
  </div>
@@ -2962,7 +2945,7 @@ function render() {
  value="${escapeHtml(f.title)}"
  placeholder="Baigties pavadinimas"
  oninput="state.editorDraft.finals[${i}].title = this.value; updateDraftHashBadge();" />
- <button class="icon-btn del" onclick="Haptics.tap(); state.editorDraft.finals.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
+ <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.finals.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
  </div>
  </div>
  `;
@@ -3000,7 +2983,7 @@ function render() {
  <div class="editor-section">
  <div class="section-head">
  <span class="section-head-label"><i class="fa-solid fa-user-group"></i> (${d.groups.length})</span>
- <button class="xs" onclick="addGroupInEditor(event)">
+ <button class="xs" onpointerdown="event.preventDefault()" onclick="addGroupInEditor(event)">
  <i class="fa-solid fa-plus"></i>
  </button>
  </div>
@@ -3011,7 +2994,7 @@ function render() {
  <div class="editor-section">
  <div class="section-head">
  <span class="section-head-label"><i class="fa-solid fa-user"></i> (${d.cards.length})</span>
- <button class="xs" onclick="addCardInEditor(event)">
+ <button class="xs" onpointerdown="event.preventDefault()" onclick="addCardInEditor(event)">
  <i class="fa-solid fa-plus"></i>
  </button>
  </div>
@@ -3021,8 +3004,8 @@ function render() {
  <!-- IV. Fazių variklis -->
  <div class="editor-section">
  <div class="section-head">
- <span>IV. Fazių variklis (${d.phases.length})</span>
- <button class="xs" onclick="addPhaseInEditor(event)">
+ <span class="section-head-label"><i class="fa-solid fa-group-arrows-rotate"></i> (${d.phases.length})</span>
+ <button class="xs" onpointerdown="event.preventDefault()" onclick="addPhaseInEditor(event)">
  <i class="fa-solid fa-plus"></i>
  </button>
  </div>
@@ -3032,8 +3015,8 @@ function render() {
  <!-- V. Žaidimo baigtys -->
  <div class="editor-section">
  <div class="section-head">
- <span>V. Žaidimo baigtys (${d.finals.length})</span>
- <button class="xs" onclick="addFinalInEditor(event)">
+ <span class="section-head-label"><i class="fa-solid fa-trophy"></i> (${d.finals.length})</span>
+ <button class="xs" onpointerdown="event.preventDefault()" onclick="addFinalInEditor(event)">
  <i class="fa-solid fa-plus"></i>
  </button>
  </div>
@@ -3041,6 +3024,10 @@ function render() {
  </div>
  </div>
  `;
+ const nextEditorWrap = app.querySelector('.editor-wrap');
+ if (nextEditorWrap && savedEditorScroll > 0) {
+ nextEditorWrap.scrollTop = savedEditorScroll;
+ }
  return;
  }
 
