@@ -603,6 +603,11 @@
  letter-spacing: 0.05em;
  min-height: 36px;
  }
+ .section-head-label {
+ display: inline-flex;
+ align-items: center;
+ gap: 7px;
+ }
  .hash-badge {
  font-family: monospace;
  font-size: 0.8rem;
@@ -689,7 +694,7 @@
  border-top: 1px dashed var(--border);
  }
  .color-cycle-btn {
- width: 30px; height: 30px;
+ width: 32px; height: 32px;
  border-radius: 50%;
  border: 2px solid rgba(255,255,255,0.55);
  flex-shrink: 0;
@@ -697,13 +702,21 @@
  display: flex;
  align-items: center;
  justify-content: center;
- font-size: 0.75rem;
- color: rgba(255,255,255,0.85);
+ font-size: 0.8rem;
+ color: rgba(255,255,255,0.92);
+ transition: transform 0.12s ease;
+ }
+ .color-cycle-btn:active {
+ transform: scale(0.9);
  }
  .color-cycle-btn.is-none {
  border: 2px dashed var(--muted);
  background: var(--bg) !important;
  color: var(--muted);
+ }
+ .color-cycle-btn.is-white {
+ color: #090a0f;
+ border-color: #fff;
  }
  .num-input {
  width: 68px;
@@ -719,36 +732,17 @@
  .num-input:focus {
  border-color: var(--accent);
  }
- .group-select {
- flex: 1;
- width: 100%;
- min-width: 0;
- height: 36px;
- appearance: none;
+ .stepper-input {
+ width: 54px;
+ height: 34px;
+ padding: 4px 6px;
+ font-weight: 700;
+ -moz-appearance: textfield;
+ }
+ .stepper-input::-webkit-outer-spin-button,
+ .stepper-input::-webkit-inner-spin-button {
  -webkit-appearance: none;
- background-color: var(--bg);
- background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b95a5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
- background-repeat: no-repeat;
- background-position: right 10px center;
- background-size: 14px;
- border: 1px solid var(--border);
- color: var(--text);
- padding: 0 30px 0 10px;
- border-radius: 8px;
- font-size: 1rem;
- line-height: 34px;
- outline: none;
- white-space: nowrap;
- overflow: hidden;
- text-overflow: ellipsis;
- cursor: pointer;
- }
- .group-select:focus {
- border-color: var(--accent);
- }
- .group-select option {
- background-color: var(--surface);
- color: var(--text);
+ margin: 0;
  }
  .icon-btn {
  width: 34px; height: 34px;
@@ -994,8 +988,8 @@ function getGroupById(gameObj, groupId) {
  return gameObj.groups.find(g => g.id === groupId) || null;
 }
 
+// Rolės spalva visada paveldima tik iš jos rolių grupės
 function resolveCardColorKey(gameObj, card) {
- if (card && card.color && card.color !== 'none') return card.color;
  if (card && card.groupId) {
  const grp = getGroupById(gameObj, card.groupId);
  if (grp && grp.color && grp.color !== 'none') return grp.color;
@@ -1026,14 +1020,14 @@ const PUBLIC_CATALOG_RAW = [
  { id: "g3", title: "Speciali rolė", color: "amber" }
  ],
  cards: [
- { id: "c1", title: "Žmogus", groupId: "g1", color: "none", count: 5 },
- { id: "c2", title: "Gydytojas", groupId: "g1", color: "none", count: 1 },
- { id: "c3", title: "Teisėjas", groupId: "g1", color: "none", count: 1 },
- { id: "c4", title: "Policininkas", groupId: "g1", color: "none", count: 1 },
- { id: "c5", title: "Imposteris", groupId: "g2", color: "none", count: 2 },
- { id: "c6", title: "Trintukas", groupId: "g2", color: "none", count: 1 },
- { id: "c7", title: "Ligonis", groupId: "g2", color: "none", count: 1 },
- { id: "c8", title: "Džakalas", groupId: "g3", color: "none", count: 1 }
+ { id: "c1", title: "Žmogus", groupId: "g1", count: 5 },
+ { id: "c2", title: "Gydytojas", groupId: "g1", count: 1 },
+ { id: "c3", title: "Teisėjas", groupId: "g1", count: 1 },
+ { id: "c4", title: "Policininkas", groupId: "g1", count: 1 },
+ { id: "c5", title: "Imposteris", groupId: "g2", count: 2 },
+ { id: "c6", title: "Trintukas", groupId: "g2", count: 1 },
+ { id: "c7", title: "Ligonis", groupId: "g2", count: 1 },
+ { id: "c8", title: "Džakalas", groupId: "g3", count: 1 }
  ],
  phases: [
  { id: "p1", title: "Susipažinimas", color: "purple", loop: false, duration: 20, fxAlarm: false },
@@ -1049,13 +1043,16 @@ const PUBLIC_CATALOG_RAW = [
  {
  title: "Mafija",
  color: "red",
- groups: [],
+ groups: [
+ { id: "g1", title: "Mafija", color: "red" },
+ { id: "g2", title: "Miestiečiai", color: "blue" }
+ ],
  cards: [
- { id: "c1", title: "Mafija", groupId: "", color: "red", count: 2 },
- { id: "c2", title: "Donas", groupId: "", color: "purple", count: 1 },
- { id: "c3", title: "Komisaras", groupId: "", color: "cyan", count: 1 },
- { id: "c4", title: "Gydytojas", groupId: "", color: "emerald", count: 1 },
- { id: "c5", title: "Miestietis", groupId: "", color: "blue", count: 6 }
+ { id: "c1", title: "Mafija", groupId: "g1", count: 2 },
+ { id: "c2", title: "Donas", groupId: "g1", count: 1 },
+ { id: "c3", title: "Komisaras", groupId: "g2", count: 1 },
+ { id: "c4", title: "Gydytojas", groupId: "g2", count: 1 },
+ { id: "c5", title: "Miestietis", groupId: "g2", count: 6 }
  ],
  phases: [
  { id: "p1", title: "Susipažinimo naktis", color: "purple", loop: false, duration: 30, fxAlarm: false },
@@ -1070,10 +1067,13 @@ const PUBLIC_CATALOG_RAW = [
  {
  title: "Šnipas",
  color: "emerald",
- groups: [],
+ groups: [
+ { id: "g1", title: "Šnipai", color: "red" },
+ { id: "g2", title: "Agentai", color: "emerald" }
+ ],
  cards: [
- { id: "c1", title: "Šnipas", groupId: "", color: "red", count: 1 },
- { id: "c2", title: "Agentas", groupId: "", color: "emerald", count: 6 }
+ { id: "c1", title: "Šnipas", groupId: "g1", count: 1 },
+ { id: "c2", title: "Agentas", groupId: "g2", count: 6 }
  ],
  phases: [
  { id: "p1", title: "Apklausa", color: "emerald", loop: false, duration: 300, fxAlarm: true }
@@ -1099,7 +1099,6 @@ function normalizeGameObject(g) {
  id: c.id || `c_${i + 1}`,
  title: c.title ?? "Rolė",
  groupId: validGroupIds.has(c.groupId) ? c.groupId : "",
- color: ITEM_COLOR_KEYS.includes(c.color) ? c.color : "none",
  count: Math.max(0, Number(c.count) || 0)
  })) : [];
  sortCardsByGroups(copy);
@@ -1140,7 +1139,6 @@ function computeCanonicalHash(gameObj) {
  cards: (gameObj.cards || []).map(c => ({
  title: (c.title || "").trim(),
  groupIdx: groupIndexMap.has(c.groupId) ? groupIndexMap.get(c.groupId) : -1,
- color: c.color || "none",
  count: Math.max(0, Number(c.count) || 0)
  })),
  phases: (gameObj.phases || []).map(p => ({
@@ -1177,7 +1175,6 @@ function gameToPositionalArray(g) {
  ]),
  (g.cards || []).map(c => [
  (c.title || "").trim(),
- Math.max(0, ITEM_COLOR_KEYS.indexOf(c.color || "none")),
  Math.max(0, Number(c.count) || 0),
  groupIndexMap.has(c.groupId) ? groupIndexMap.get(c.groupId) : -1
  ]),
@@ -1216,7 +1213,6 @@ function positionalArrayToGame(arr) {
  return {
  id: `c_${i + 1}`,
  title: String(c[0] || "Rolė"),
- color: colorLookup[c[1]] || "none",
  count: Math.max(0, Number(c[2]) || 0),
  groupId: grpIdx !== -1 ? groups[grpIdx].id : ""
  };
@@ -1251,12 +1247,15 @@ function positionalArrayToGame(arr) {
  color: COLOR_KEYS[arr[1]] || "blue",
  groups,
  cards: Array.isArray(arr[3]) ? arr[3].map((c, i) => {
- const grpIdx = (c.length > 3 && Number.isInteger(c[3]) && c[3] >= 0 && groups[c[3]]) ? c[3] : -1;
+ // Palaikomas ir 3 elementų [title, count, grpIdx], ir senesnis 4 elementų [title, color, count, grpIdx] formatas
+ const isFourTuple = c.length >= 4;
+ const countVal = isFourTuple ? c[2] : c[1];
+ const rawGrpIdx = isFourTuple ? c[3] : c[2];
+ const grpIdx = (Number.isInteger(rawGrpIdx) && rawGrpIdx >= 0 && groups[rawGrpIdx]) ? rawGrpIdx : -1;
  return {
  id: `c_${i + 1}`,
  title: String(c[0] || "Rolė"),
- color: ITEM_COLOR_KEYS[c[1]] || "none",
- count: Math.max(0, Number(c[2]) || 0),
+ count: Math.max(0, Number(countVal) || 0),
  groupId: grpIdx !== -1 ? groups[grpIdx].id : ""
  };
  }) : [],
@@ -2244,7 +2243,6 @@ function addCardInEditor(e) {
  id: uid('c'),
  title: 'Nauja rolė',
  groupId: inheritedGroupId,
- color: 'none',
  count: 1
  });
  updateDraftHashBadge();
@@ -2259,10 +2257,28 @@ function adjustEditorCardCount(cardIndex, delta) {
  updateDraftHashBadge();
  const countEl = document.getElementById(`editor-card-count-${cardIndex}`);
  if (countEl) {
- countEl.textContent = card.count;
+ countEl.value = card.count;
  } else {
  render();
  }
+}
+
+function cycleCardGroupInEditor(cardIndex) {
+ if (!state.editorDraft) return;
+ const card = state.editorDraft.cards[cardIndex];
+ if (!card) return;
+ Haptics.tap();
+
+ const groups = state.editorDraft.groups || [];
+ if (groups.length === 0) return;
+
+ const groupIds = ['', ...groups.map(g => g.id)];
+ const currentIdx = groupIds.indexOf(card.groupId || '');
+ const nextIdx = (currentIdx + 1) % groupIds.length;
+ card.groupId = groupIds[nextIdx];
+
+ updateDraftHashBadge();
+ render();
 }
 
 function addPhaseInEditor(e) {
@@ -2313,31 +2329,6 @@ function updateDraftHashBadge() {
 function cycleItemColor(currentKey) {
  const idx = ITEM_COLOR_KEYS.indexOf(currentKey || 'none');
  return ITEM_COLOR_KEYS[(idx + 1) % ITEM_COLOR_KEYS.length];
-}
-
-function cycleCardColorInEditor(cardIndex) {
- if (!state.editorDraft) return;
- const card = state.editorDraft.cards[cardIndex];
- if (!card) return;
- Haptics.tap();
- const grp = getGroupById(state.editorDraft, card.groupId);
- const grpColor = (grp && grp.color && grp.color !== 'none') ? grp.color : null;
-
- let next = cycleItemColor(card.color);
- if (grpColor && next === grpColor) {
- next = cycleItemColor(next);
- }
- card.color = next;
- updateDraftHashBadge();
- render();
-}
-
-function updateGroupTitleInSelects(groupId, newTitle) {
- const selects = document.querySelectorAll('.group-select');
- selects.forEach(sel => {
- const opt = sel.querySelector(`option[value="${groupId}"]`);
- if (opt) opt.textContent = newTitle || 'Grupė';
- });
 }
 
 function deleteGroupInEditor(groupIndex) {
@@ -2862,11 +2853,12 @@ function render() {
 
  const groupsHtml = d.groups.map((grp, i) => {
  const isNone = !grp.color || grp.color === 'none';
+ const isWhite = grp.color === 'white';
  const itemColorCss = getColorCss(grp.color, 'var(--border)');
  return `
  <div class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
- <div class="color-cycle-btn ${isNone ? 'is-none' : ''}"
+ <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[grp.color]}"
  onclick="Haptics.tap(); state.editorDraft.groups[${i}].color = cycleItemColor('${grp.color}'); updateDraftHashBadge(); render();">
  ${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}
@@ -2874,7 +2866,7 @@ function render() {
  <input class="text-input"
  value="${escapeHtml(grp.title)}"
  placeholder="Grupės pavadinimas"
- oninput="state.editorDraft.groups[${i}].title = this.value; updateGroupTitleInSelects('${grp.id}', this.value); updateDraftHashBadge();" />
+ oninput="state.editorDraft.groups[${i}].title = this.value; updateDraftHashBadge();" />
  <button class="icon-btn del" onclick="deleteGroupInEditor(${i})"><i class="fa-solid fa-trash"></i></button>
  </div>
  </div>
@@ -2882,22 +2874,20 @@ function render() {
  }).join('');
 
  const cardsHtml = d.cards.map((c, i) => {
+ const grp = getGroupById(d, c.groupId);
  const resolvedColorKey = resolveCardColorKey(d, c);
  const isNoneResolved = resolvedColorKey === 'none';
+ const isWhiteResolved = resolvedColorKey === 'white';
  const itemColorCss = getColorCss(resolvedColorKey, 'var(--border)');
-
- const groupOptions = [
- `<option value="" ${!c.groupId ? 'selected' : ''}>Be grupės</option>`,
- ...d.groups.map(grp => `<option value="${grp.id}" ${c.groupId === grp.id ? 'selected' : ''}>${escapeHtml(grp.title)}</option>`)
- ].join('');
 
  return `
  <div class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
- <div class="color-cycle-btn ${isNoneResolved ? 'is-none' : ''}"
+ <div class="color-cycle-btn ${isNoneResolved ? 'is-none' : ''} ${isWhiteResolved ? 'is-white' : ''}"
+ title="${grp ? escapeHtml(grp.title) : 'Be grupės'}"
  style="background: ${isNoneResolved ? 'transparent' : PALETTE[resolvedColorKey]}"
- onclick="cycleCardColorInEditor(${i})">
- ${isNoneResolved ? '<i class="fa-solid fa-ban"></i>' : ''}
+ onclick="cycleCardGroupInEditor(${i})">
+ <i class="fa-solid fa-user-group"></i>
  </div>
  <input class="text-input"
  value="${escapeHtml(c.title)}"
@@ -2905,13 +2895,12 @@ function render() {
  oninput="state.editorDraft.cards[${i}].title = this.value; updateDraftHashBadge();" />
  </div>
  <div class="editor-item-subrow">
- <select class="group-select"
- onchange="Haptics.tap(); state.editorDraft.cards[${i}].groupId = this.value; state.editorDraft.cards[${i}].color = 'none'; updateDraftHashBadge(); render();">
- ${groupOptions}
- </select>
  <div class="stepper">
  <button class="icon-btn" onclick="adjustEditorCardCount(${i}, -1)"><i class="fa-solid fa-minus"></i></button>
- <span id="editor-card-count-${i}">${c.count}</span>
+ <input type="number" min="0" class="num-input stepper-input"
+ id="editor-card-count-${i}"
+ value="${c.count}"
+ oninput="state.editorDraft.cards[${i}].count = Math.max(0, parseInt(this.value, 10) || 0); updateDraftHashBadge();" />
  <button class="icon-btn" onclick="adjustEditorCardCount(${i}, 1)"><i class="fa-solid fa-plus"></i></button>
  </div>
  <button class="icon-btn del" onclick="Haptics.tap(); state.editorDraft.cards.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
@@ -2922,11 +2911,12 @@ function render() {
 
  const phasesHtml = d.phases.map((p, i) => {
  const isNone = !p.color || p.color === 'none';
+ const isWhite = p.color === 'white';
  const itemColorCss = getColorCss(p.color, 'var(--border)');
  return `
  <div class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
- <div class="color-cycle-btn ${isNone ? 'is-none' : ''}"
+ <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[p.color]}"
  onclick="Haptics.tap(); state.editorDraft.phases[${i}].color = cycleItemColor('${p.color}'); updateDraftHashBadge(); render();">
  ${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}
@@ -2963,11 +2953,12 @@ function render() {
 
  const finalsHtml = d.finals.map((f, i) => {
  const isNone = !f.color || f.color === 'none';
+ const isWhite = f.color === 'white';
  const itemColorCss = getColorCss(f.color, 'var(--border)');
  return `
  <div class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
- <div class="color-cycle-btn ${isNone ? 'is-none' : ''}"
+ <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[f.color]}"
  onclick="Haptics.tap(); state.editorDraft.finals[${i}].color = cycleItemColor('${f.color}'); updateDraftHashBadge(); render();">
  ${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}
@@ -3013,7 +3004,7 @@ function render() {
  <!-- II. Rolių grupės -->
  <div class="editor-section">
  <div class="section-head">
- <span>II. Rolių grupės (${d.groups.length})</span>
+ <span class="section-head-label"><i class="fa-solid fa-user-group"></i> (${d.groups.length})</span>
  <button class="xs" onclick="addGroupInEditor(event)">
  <i class="fa-solid fa-plus"></i>
  </button>
@@ -3024,7 +3015,7 @@ function render() {
  <!-- III. Rolės -->
  <div class="editor-section">
  <div class="section-head">
- <span>III. Rolės (${d.cards.length})</span>
+ <span class="section-head-label"><i class="fa-solid fa-user"></i> (${d.cards.length})</span>
  <button class="xs" onclick="addCardInEditor(event)">
  <i class="fa-solid fa-plus"></i>
  </button>
