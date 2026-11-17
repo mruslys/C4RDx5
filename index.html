@@ -1884,6 +1884,13 @@ function navigateToHomeUrl() {
  window.location.href = getBaseShareUrl();
 }
 
+function openLastRecentGame() {
+ if (!state.recentGames || state.recentGames.length === 0) return;
+ Haptics.tap();
+ const lastGame = state.recentGames[0];
+ openGameSession(lastGame, { isPublic: isPublicCatalogGame(lastGame.hash) });
+}
+
 function openRandomPublicGame() {
  if (!PUBLIC_GAMES || PUBLIC_GAMES.length === 0) return;
  Haptics.tap();
@@ -2799,10 +2806,11 @@ function render() {
  (BASE_GAME.finals && BASE_GAME.finals.length > 0);
 
  // --------------------------------------------------------------------------
- // 0. HOME KATALOGAS: LOGO -> TAB'AI -> SĄRAŠAS -> PLAUKIOJANTYS (DICE + PLUS)
+ // 0. HOME KATALOGAS: LOGO -> TAB'AI -> SĄRAŠAS -> PLAUKIOJANTYS (RECENT + DICE + PLUS)
  // --------------------------------------------------------------------------
  if (state.screen === 'HOME') {
  const tab = state.catalogTab || 'pub';
+ const hasRecent = state.recentGames.length > 0;
  let listContentHtml = '';
 
  if (tab === 'pub') {
@@ -2866,6 +2874,11 @@ function render() {
 
  <div class="bottom-bar floating-bottom">
  <div class="action-row">
+ <button class="lg"
+ ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''}
+ onclick="openLastRecentGame()">
+ <i class="fa-solid fa-clock-rotate-left"></i>
+ </button>
  <button class="lg" onclick="openRandomPublicGame()">
  <i class="fa-solid fa-dice"></i>
  </button>
