@@ -626,14 +626,14 @@
  flex-direction: column;
  gap: 6px;
  }
- .field-label {
- font-size: 0.82rem;
- color: var(--muted);
- font-weight: 600;
- }
  .field-icon {
  color: var(--muted);
  font-size: 1rem;
+ }
+ .field-unit {
+ color: var(--muted);
+ font-size: 0.9rem;
+ font-weight: 600;
  }
  .text-input {
  width: 100%;
@@ -774,6 +774,12 @@
 const APP_DEFAULT_TITLE = 'C4RDx5 — Universalus žaidimų moderatorius';
 const MAX_RECENT_GAMES = 10; // Maksimalus paskutinių žaistų žaidimų skaičius
 const SESSION_TTL_MS = 6 * 60 * 60 * 1000; // Sesijos rolių kiekių galiojimo laikas (6 val. nuo paskutinio Play/keitimo)
+
+function getGameTitleWithHash(gameObj) {
+ if (!gameObj) return APP_DEFAULT_TITLE;
+ const baseTitle = (gameObj.title || 'C4RDx5').trim();
+ return gameObj.hash ? `${baseTitle} [${gameObj.hash}]` : baseTitle;
+}
 
 const Haptics = {
  vibrate(pattern) {
@@ -1678,7 +1684,7 @@ let BASE_GAME = PUBLIC_GAMES[0];
 
 const state = {
  screen: 'HOME', // 'HOME' | 'PREGAME' | 'EDITOR' | 'DEAL' | 'DEAL_DONE' | 'PHASE' | 'FINAL'
- catalogTab: 'pub', // 'pub' | 'fav' | 'my' | 'recent'
+ catalogTab: 'pub', // 'pub' | 'fav' | 'recent' | 'my'
  locked: false,
  wakeLock: null,
  fxStartTimer: null,
@@ -1963,7 +1969,7 @@ function startFinalHold(idx, e) {
 }
 
 // ============================================================================
-// KATALOGO IR DALIJIMOSI VEIKSMAI (FAVORITE, SAVE, SHARE SU ŽAIDIMO PAVADINIMU)
+// KATALOGO IR DALIJIMOSI VEIKSMAI (FAVORITE, SAVE, SHARE SU PAVADINIMU IR [HASH])
 // ============================================================================
 function findGameAnySourceByHash(hash) {
  return state.myGames.find(g => g.hash === hash) ||
@@ -2048,7 +2054,7 @@ async function shareCurrentGame(e) {
  const game = BASE_GAME;
  if (!game) return;
 
- const gameTitle = (game.title || 'C4RDx5').trim();
+ const gameTitle = getGameTitleWithHash(game);
  document.title = gameTitle;
 
  const deflated = await encodeGameToDeflateParam(game);
@@ -2139,7 +2145,7 @@ function goToPregame() {
  SoundEngine.stopKeepAlive();
  state.alarmActive = false;
  state.screen = 'PREGAME';
- document.title = (BASE_GAME && BASE_GAME.title) ? BASE_GAME.title : APP_DEFAULT_TITLE;
+ document.title = getGameTitleWithHash(BASE_GAME);
  clearAppEffects();
  setAccent(BASE_GAME.color);
  render();
@@ -2675,7 +2681,7 @@ function render() {
  (BASE_GAME.finals && BASE_GAME.finals.length > 0);
 
  // --------------------------------------------------------------------------
- // 0. HOME KATALOGAS: LOGO -> ADD GAME (+) -> TAB'AI (PUB, FAV, MY, RECENT)
+ // 0. HOME KATALOGAS: LOGO -> ADD GAME (+) -> TAB'AI (PUB, FAV, RECENT, MY)
  // --------------------------------------------------------------------------
  if (state.screen === 'HOME') {
  const tab = state.catalogTab || 'pub';
@@ -2685,6 +2691,8 @@ function render() {
  listContentHtml = PUBLIC_GAMES.map(g => renderCatalogRowFavOnly(g, false, '{ isPublic: true }')).join('');
  } else if (tab === 'fav') {
  listContentHtml = state.favGames.map(g => renderCatalogRowFavOnly(g, true)).join('');
+ } else if (tab === 'recent') {
+ listContentHtml = state.recentGames.map(g => renderCatalogRowFavOnly(g, false)).join('');
  } else if (tab === 'my') {
  listContentHtml = state.myGames.map(g => {
  const faved = isFavorited(g.hash);
@@ -2695,9 +2703,6 @@ function render() {
  onclick="openGameByHashFromList('${g.hash}')">
  <div class="catalog-card-title">${escapeHtml(g.title)}</div>
  <div class="catalog-card-actions">
- <button class="xs" onclick="openEditorByHash('${g.hash}', event)">
- <i class="fa-solid fa-pen-to-square"></i>
- </button>
  <button id="del-btn-${g.hash}"
  class="xs hold-btn"
  oncontextmenu="return false;"
@@ -2711,12 +2716,13 @@ function render() {
  <button class="xs ${faved ? 'star-active' : ''}" onclick="toggleFavoriteGame('${g.hash}', event)">
  <i class="${faved ? 'fa-solid' : 'fa-regular'} fa-star"></i>
  </button>
+ <button class="xs" onclick="openEditorByHash('${g.hash}', event)">
+ <i class="fa-solid fa-pen-to-square"></i>
+ </button>
  </div>
  </div>
  `;
  }).join('');
- } else if (tab === 'recent') {
- listContentHtml = state.recentGames.map(g => renderCatalogRowFavOnly(g, false)).join('');
  }
 
  app.innerHTML = `
@@ -2738,13 +2744,13 @@ function render() {
  <i class="fa-solid fa-star"></i>
  <span class="catalog-tab-count">${state.favGames.length}</span>
  </button>
- <button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')">
- <i class="fa-solid fa-floppy-disk"></i>
- <span class="catalog-tab-count">${state.myGames.length}</span>
- </button>
  <button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')">
  <i class="fa-solid fa-clock-rotate-left"></i>
  <span class="catalog-tab-count">${state.recentGames.length}</span>
+ </button>
+ <button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')">
+ <i class="fa-solid fa-floppy-disk"></i>
+ <span class="catalog-tab-count">${state.myGames.length}</span>
  </button>
  </div>
 
@@ -2770,7 +2776,6 @@ function render() {
  let modeControlsHtml = '';
  const isSavedInMyGames = isInMyGames(BASE_GAME.hash);
  const showEditButton = isSavedInMyGames || state.currentGameIsPublic;
- const isFaved = isFavorited(BASE_GAME.hash);
  const isCopied = state.copiedShareHash === BASE_GAME.hash;
 
  if (hasCards) {
@@ -2815,9 +2820,6 @@ function render() {
  `}
  <button class="sm" onclick="SoundEngine.toggleMute()">
  <i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>
- </button>
- <button class="sm ${isFaved ? 'star-active' : ''}" onclick="toggleFavoriteGame('${BASE_GAME.hash}', event)">
- <i class="${isFaved ? 'fa-solid' : 'fa-regular'} fa-star"></i>
  </button>
  <button class="sm ${isCopied ? 'copied-check' : ''}" onclick="shareCurrentGame(event)">
  <i class="fa-solid ${isCopied ? 'fa-check' : 'fa-share-nodes'}"></i>
@@ -2926,6 +2928,7 @@ function render() {
  value="${escapeHtml(p.title)}"
  placeholder="Fazės pavadinimas"
  oninput="state.editorDraft.phases[${i}].title = this.value; updateDraftHashBadge();" />
+ <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
  </div>
  <div class="editor-item-subrow">
  <div class="toggle-group">
@@ -2933,6 +2936,7 @@ function render() {
  <input type="number" min="0" class="num-input"
  value="${p.duration}"
  oninput="state.editorDraft.phases[${i}].duration = Math.max(0, parseInt(this.value)||0); updateDraftHashBadge();" />
+ <span class="field-unit">s.</span>
  </div>
  <div class="toggle-group">
  <button class="icon-btn ${p.loop ? 'active-toggle' : ''}"
@@ -2947,7 +2951,6 @@ function render() {
  </button>
  <button class="icon-btn" onpointerdown="event.preventDefault()" onclick="moveItem(state.editorDraft.phases, ${i}, -1)"><i class="fa-solid fa-chevron-up"></i></button>
  <button class="icon-btn" onpointerdown="event.preventDefault()" onclick="moveItem(state.editorDraft.phases, ${i}, 1)"><i class="fa-solid fa-chevron-down"></i></button>
- <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
  </div>
  </div>
  </div>
@@ -2991,18 +2994,17 @@ function render() {
  <!-- I. Bendrieji nustatymai (Pavadinimas ir spalva) -->
  <div class="editor-section">
  <div class="section-head">
- <span>I. Bendrieji nustatymai</span>
+ <span class="section-head-label"><i class="fa-solid fa-id-card"></i></span>
  <span class="hash-badge" id="draft-hash-badge">#${d.hash}</span>
  </div>
 
  <div class="field-row">
- <label class="field-label">Žaidimo pavadinimas</label>
  <input class="text-input" value="${escapeHtml(d.title)}"
+ placeholder="Žaidimo pavadinimas"
  oninput="state.editorDraft.title = this.value; updateDraftHashBadge();" />
  </div>
 
  <div class="field-row">
- <label class="field-label">Akcentinė spalva</label>
  <div class="palette-row">${paletteHtml}</div>
  </div>
  </div>
