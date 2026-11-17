@@ -2871,7 +2871,7 @@ function render() {
  <span class="catalog-tab-count">${state.recentGames.length}</span>
  </button>
  <button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')">
- <i class="fa-solid fa-floppy-disk"></i>
+ <i class="fa-solid fa-pen-to-square"></i>
  <span class="catalog-tab-count">${state.myGames.length}</span>
  </button>
  </div>
@@ -2956,7 +2956,7 @@ function render() {
  </button>
  ` : `
  <button class="sm" onclick="saveCurrentGameInPregame()">
- <i class="fa-solid fa-floppy-disk"></i>
+ <i class="fa-solid fa-cloud-arrow-down"></i>
  </button>
  `}
  <button class="sm" onclick="SoundEngine.toggleMute()">
@@ -3182,7 +3182,7 @@ function render() {
  <i class="fa-solid fa-trash"></i>
  </button>
  <button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()">
- <i class="fa-solid fa-floppy-disk"></i>
+ <i class="fa-solid fa-check"></i>
  </button>
  </div>
  </div>
