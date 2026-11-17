@@ -300,23 +300,13 @@
  border-radius: 12px;
  padding: 11px 13px;
  cursor: pointer;
- transition: transform 0.16s ease, opacity 0.22s ease, max-height 0.22s ease, padding 0.22s ease, margin 0.22s ease, border-color 0.2s;
+ transition: transform 0.16s ease, border-color 0.2s;
  gap: 10px;
  max-height: 90px;
  overflow: hidden;
  }
  .catalog-card:active {
  transform: scale(0.985);
- }
- .catalog-card.deleting-card {
- opacity: 0 !important;
- transform: scale(0.93) !important;
- max-height: 0 !important;
- padding-top: 0 !important;
- padding-bottom: 0 !important;
- margin-top: -8px !important;
- border-width: 0 !important;
- pointer-events: none !important;
  }
  .catalog-card-title {
  font-size: 1.1rem;
@@ -686,6 +676,19 @@
  display: flex;
  flex-direction: column;
  gap: 8px;
+ max-height: 150px;
+ overflow: hidden;
+ transition: transform 0.16s ease, opacity 0.22s ease, max-height 0.22s ease, padding 0.22s ease, margin 0.22s ease, border-color 0.2s;
+ }
+ .editor-item.deleting-item {
+ opacity: 0 !important;
+ transform: scale(0.93) !important;
+ max-height: 0 !important;
+ padding-top: 0 !important;
+ padding-bottom: 0 !important;
+ margin-top: -10px !important;
+ border-width: 0 !important;
+ pointer-events: none !important;
  }
  .editor-item-main {
  display: flex;
@@ -1860,20 +1863,23 @@ async function openGameSession(gameObj, options = {}) {
 // VISI UŽLAIKYMO (HOLD) VEIKSMAI PER BENDRĄ HOLDENGINE
 // ============================================================================
 
-// 1. Išsaugoto žaidimo trynimas kataloge (raudonas kortelės blyksnis + fade-in)
-function startDeleteHold(hash, e) {
- if (state.screen !== 'HOME') return;
- HoldEngine.start(`del:${hash}`, {
+// 1. Redaktoriaus blokų elementų (grupių, rolių, fazių, baigčių) trynimas su užlaikymu
+function startEditorItemDeleteHold(type, index, e) {
+ if (state.screen !== 'EDITOR' || !state.editorDraft) return;
+ const itemId = `ed-item-${type}-${index}`;
+ const btnId = `ed-del-${type}-${index}`;
+
+ HoldEngine.start(`ed-del:${type}:${index}`, {
  isDanger: true,
  onUpdate(p) {
- const card = document.getElementById(`my-card-${hash}`);
- const btn = document.getElementById(`del-btn-${hash}`);
- if (!card) return;
+ const item = document.getElementById(itemId);
+ const btn = document.getElementById(btnId);
+ if (!item) return;
  const pct = Math.round(p * 100);
- card.style.borderColor = `rgba(239, 68, 68, ${(0.35 + 0.65 * p).toFixed(2)})`;
- card.style.borderLeftColor = 'var(--c-red)';
- card.style.boxShadow = `inset 0 0 ${Math.round(55 * p)}px rgba(239, 68, 68, ${(0.65 * p).toFixed(2)}), 0 0 ${Math.round(20 * p)}px rgba(239, 68, 68, ${(0.4 * p).toFixed(2)})`;
- card.style.background = `linear-gradient(90deg, rgba(239, 68, 68, ${(0.48 * p).toFixed(2)}) ${pct}%, rgba(239, 68, 68, ${(0.16 * p).toFixed(2)}) ${pct}%), var(--surface-2)`;
+ item.style.borderColor = `rgba(239, 68, 68, ${(0.35 + 0.65 * p).toFixed(2)})`;
+ item.style.borderLeftColor = 'var(--c-red)';
+ item.style.boxShadow = `inset 0 0 ${Math.round(55 * p)}px rgba(239, 68, 68, ${(0.65 * p).toFixed(2)}), 0 0 ${Math.round(20 * p)}px rgba(239, 68, 68, ${(0.4 * p).toFixed(2)})`;
+ item.style.background = `linear-gradient(90deg, rgba(239, 68, 68, ${(0.48 * p).toFixed(2)}) ${pct}%, rgba(239, 68, 68, ${(0.16 * p).toFixed(2)}) ${pct}%), var(--surface-2)`;
  if (btn) {
  btn.style.borderColor = 'var(--c-red)';
  btn.style.color = p > 0.45 ? '#fff' : 'var(--c-red)';
@@ -1881,13 +1887,13 @@ function startDeleteHold(hash, e) {
  }
  },
  onCleanup() {
- const card = document.getElementById(`my-card-${hash}`);
- const btn = document.getElementById(`del-btn-${hash}`);
- if (card) {
- card.style.borderColor = '';
- card.style.borderLeftColor = '';
- card.style.boxShadow = '';
- card.style.background = '';
+ const item = document.getElementById(itemId);
+ const btn = document.getElementById(btnId);
+ if (item) {
+ item.style.borderColor = '';
+ item.style.borderLeftColor = '';
+ item.style.boxShadow = '';
+ item.style.background = '';
  }
  if (btn) {
  btn.style.borderColor = '';
@@ -1895,15 +1901,30 @@ function startDeleteHold(hash, e) {
  btn.style.background = '';
  }
  },
- async onComplete() {
- const card = document.getElementById(`my-card-${hash}`);
- if (card) card.classList.add('deleting-card');
- await CacheStore.remove(CacheStore.MY_CACHE, CacheStore.memMy, hash);
- await purgeNonPublicGameFromOtherCaches(hash);
- await refreshCatalogState();
+ onComplete() {
+ const item = document.getElementById(itemId);
+ if (item) item.classList.add('deleting-item');
+
  setTimeout(() => {
- if (state.screen === 'HOME') render();
- }, 220);
+ if (state.screen !== 'EDITOR' || !state.editorDraft) return;
+ if (type === 'group') {
+ const grp = state.editorDraft.groups[index];
+ if (grp) {
+ state.editorDraft.groups.splice(index, 1);
+ state.editorDraft.cards.forEach(c => {
+ if (c.groupId === grp.id) c.groupId = "";
+ });
+ }
+ } else if (type === 'card') {
+ state.editorDraft.cards.splice(index, 1);
+ } else if (type === 'phase') {
+ state.editorDraft.phases.splice(index, 1);
+ } else if (type === 'final') {
+ state.editorDraft.finals.splice(index, 1);
+ }
+ updateDraftHashBadge();
+ render();
+ }, 200);
  }
  }, e);
 }
@@ -2376,21 +2397,6 @@ function cycleItemColor(currentKey) {
  return ITEM_COLOR_KEYS[(idx + 1) % ITEM_COLOR_KEYS.length];
 }
 
-function deleteGroupInEditor(groupIndex) {
- if (!state.editorDraft) return;
- const grp = state.editorDraft.groups[groupIndex];
- if (!grp) return;
- Haptics.tap();
- state.editorDraft.groups.splice(groupIndex, 1);
- state.editorDraft.cards.forEach(c => {
- if (c.groupId === grp.id) {
- c.groupId = "";
- }
- });
- updateDraftHashBadge();
- render();
-}
-
 function moveItem(arr, index, dir) {
  const target = index + dir;
  if (target < 0 || target >= arr.length) return;
@@ -2402,6 +2408,7 @@ function moveItem(arr, index, dir) {
  render();
 }
 
+// Išsaugo pakeitimus į Saved talpyklą, atnaujina pradinį hash ir lieka redaktoriuje
 async function saveEditorChanges() {
  if (!state.editorDraft) return;
  Haptics.tap();
@@ -2415,7 +2422,16 @@ async function saveEditorChanges() {
  await purgeNonPublicGameFromOtherCaches(state.editingOriginHash);
  }
  await CacheStore.put(CacheStore.MY_CACHE, CacheStore.memMy, savedGame);
- await openGameSession(savedGame, { isPublic: isPublicCatalogGame(savedGame.hash) });
+ await refreshCatalogState();
+
+ BASE_GAME = savedGame;
+ state.currentGameIsPublic = isPublicCatalogGame(savedGame.hash);
+ state.editorDraft = normalizeGameObject(savedGame);
+ state.editingOriginHash = savedGame.hash;
+ state.editorInitialHash = savedGame.hash;
+ document.title = getGameTitleWithHash(savedGame);
+ setAccent(savedGame.color);
+ render();
 }
 
 // ============================================================================
@@ -2699,7 +2715,6 @@ function renderTimerOnly() {
 }
 
 function openGameByHashFromList(hash, options = {}) {
- if (HoldEngine.activeKey === `del:${hash}` && HoldEngine.progress > 0.05) return;
  Haptics.tap();
  const g = findGameAnySourceByHash(hash);
  if (g) openGameSession(g, options);
@@ -2759,16 +2774,6 @@ function render() {
  onclick="openGameByHashFromList('${g.hash}')">
  <div class="catalog-card-title">${escapeHtml(g.title)}</div>
  <div class="catalog-card-actions">
- <button id="del-btn-${g.hash}"
- class="xs hold-btn"
- oncontextmenu="return false;"
- onclick="event.stopPropagation();"
- onpointerdown="startDeleteHold('${g.hash}', event)"
- onpointerup="HoldEngine.release()"
- onpointerleave="HoldEngine.release()"
- onpointercancel="HoldEngine.release()">
- <i class="fa-solid fa-trash"></i>
- </button>
  <button class="xs" onclick="openEditorByHash('${g.hash}', event)">
  <i class="fa-solid fa-pen-to-square"></i>
  </button>
@@ -2922,7 +2927,7 @@ function render() {
  const isWhite = grp.color === 'white';
  const itemColorCss = getColorCss(grp.color, 'var(--border)');
  return `
- <div class="editor-item" style="--item-color: ${itemColorCss}">
+ <div id="ed-item-group-${i}" class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
  <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[grp.color]}"
@@ -2934,7 +2939,16 @@ function render() {
  value="${escapeHtml(grp.title)}"
  placeholder="Grupės pavadinimas"
  oninput="state.editorDraft.groups[${i}].title = this.value; updateDraftHashBadge();" />
- <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="deleteGroupInEditor(${i})"><i class="fa-solid fa-trash"></i></button>
+ <button id="ed-del-group-${i}"
+ class="icon-btn del hold-btn"
+ oncontextmenu="return false;"
+ onclick="event.stopPropagation();"
+ onpointerdown="startEditorItemDeleteHold('group', ${i}, event)"
+ onpointerup="HoldEngine.release()"
+ onpointerleave="HoldEngine.release()"
+ onpointercancel="HoldEngine.release()">
+ <i class="fa-solid fa-trash"></i>
+ </button>
  </div>
  </div>
  `;
@@ -2948,7 +2962,7 @@ function render() {
  const itemColorCss = getColorCss(resolvedColorKey, 'var(--border)');
 
  return `
- <div class="editor-item" style="--item-color: ${itemColorCss}">
+ <div id="ed-item-card-${i}" class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
  <div class="color-cycle-btn ${isNoneResolved ? 'is-none' : ''} ${isWhiteResolved ? 'is-white' : ''}"
  title="${grp ? escapeHtml(grp.title) : 'Be grupės'}"
@@ -2961,7 +2975,16 @@ function render() {
  value="${escapeHtml(c.title)}"
  placeholder="Rolės pavadinimas"
  oninput="state.editorDraft.cards[${i}].title = this.value; updateDraftHashBadge();" />
- <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.cards.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
+ <button id="ed-del-card-${i}"
+ class="icon-btn del hold-btn"
+ oncontextmenu="return false;"
+ onclick="event.stopPropagation();"
+ onpointerdown="startEditorItemDeleteHold('card', ${i}, event)"
+ onpointerup="HoldEngine.release()"
+ onpointerleave="HoldEngine.release()"
+ onpointercancel="HoldEngine.release()">
+ <i class="fa-solid fa-trash"></i>
+ </button>
  </div>
  </div>
  `;
@@ -2972,7 +2995,7 @@ function render() {
  const isWhite = p.color === 'white';
  const itemColorCss = getColorCss(p.color, 'var(--border)');
  return `
- <div class="editor-item" style="--item-color: ${itemColorCss}">
+ <div id="ed-item-phase-${i}" class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
  <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[p.color]}"
@@ -2984,7 +3007,16 @@ function render() {
  value="${escapeHtml(p.title)}"
  placeholder="Fazės pavadinimas"
  oninput="state.editorDraft.phases[${i}].title = this.value; updateDraftHashBadge();" />
- <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
+ <button id="ed-del-phase-${i}"
+ class="icon-btn del hold-btn"
+ oncontextmenu="return false;"
+ onclick="event.stopPropagation();"
+ onpointerdown="startEditorItemDeleteHold('phase', ${i}, event)"
+ onpointerup="HoldEngine.release()"
+ onpointerleave="HoldEngine.release()"
+ onpointercancel="HoldEngine.release()">
+ <i class="fa-solid fa-trash"></i>
+ </button>
  </div>
  <div class="editor-item-subrow">
  <div class="toggle-group">
@@ -3018,7 +3050,7 @@ function render() {
  const isWhite = f.color === 'white';
  const itemColorCss = getColorCss(f.color, 'var(--border)');
  return `
- <div class="editor-item" style="--item-color: ${itemColorCss}">
+ <div id="ed-item-final-${i}" class="editor-item" style="--item-color: ${itemColorCss}">
  <div class="editor-item-main">
  <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}"
  style="background: ${isNone ? 'transparent' : PALETTE[f.color]}"
@@ -3030,7 +3062,16 @@ function render() {
  value="${escapeHtml(f.title)}"
  placeholder="Baigties pavadinimas"
  oninput="state.editorDraft.finals[${i}].title = this.value; updateDraftHashBadge();" />
- <button class="icon-btn del" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.finals.splice(${i}, 1); updateDraftHashBadge(); render();"><i class="fa-solid fa-trash"></i></button>
+ <button id="ed-del-final-${i}"
+ class="icon-btn del hold-btn"
+ oncontextmenu="return false;"
+ onclick="event.stopPropagation();"
+ onpointerdown="startEditorItemDeleteHold('final', ${i}, event)"
+ onpointerup="HoldEngine.release()"
+ onpointerleave="HoldEngine.release()"
+ onpointercancel="HoldEngine.release()">
+ <i class="fa-solid fa-trash"></i>
+ </button>
  </div>
  </div>
  `;
@@ -3067,7 +3108,7 @@ function render() {
  <!-- I. Bendrieji nustatymai (Pavadinimas ir spalva) -->
  <div class="editor-section">
  <div class="section-head">
- <span class="section-head-label"><i class="fa-solid fa-id-card"></i></span>
+ <span class="section-head-label"><i class="fa-solid fa-palette"></i></span>
  <span class="hash-badge" id="draft-hash-badge">#${d.hash}</span>
  </div>
 
