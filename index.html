@@ -567,7 +567,11 @@
  font-size: 4rem;
  }
 
- .btn-confirm { border-color: var(--c-emerald); color: var(--c-emerald); }
+ .btn-confirm {
+ border-color: var(--c-emerald) !important;
+ color: var(--c-emerald) !important;
+ box-shadow: 0 0 14px -4px var(--c-emerald);
+ }
 
  /* =========================================================================
  2. REDAKTORIUS (EDITOR FORMA)
@@ -1674,7 +1678,7 @@ let BASE_GAME = PUBLIC_GAMES[0];
 
 const state = {
  screen: 'HOME', // 'HOME' | 'PREGAME' | 'EDITOR' | 'DEAL' | 'DEAL_DONE' | 'PHASE' | 'FINAL'
- catalogTab: 'my', // 'my' | 'fav' | 'pub' | 'recent'
+ catalogTab: 'pub', // 'pub' | 'fav' | 'my' | 'recent'
  locked: false,
  wakeLock: null,
  fxStartTimer: null,
@@ -1695,6 +1699,7 @@ const state = {
  // 2. Redaktoriaus laikinas juodraštis
  editorDraft: null,
  editingOriginHash: null,
+ editorInitialHash: null,
 
  // 3.B Dalijimo būsena
  deck: [],
@@ -1965,7 +1970,7 @@ function findGameAnySourceByHash(hash) {
  state.favGames.find(g => g.hash === hash) ||
  state.recentGames.find(g => g.hash === hash) ||
  PUBLIC_GAMES.find(g => g.hash === hash) ||
- null;
+ (BASE_GAME && BASE_GAME.hash === hash ? BASE_GAME : null);
 }
 
 function isFavorited(hash) {
@@ -2164,6 +2169,7 @@ function openEditorForNew() {
  });
  state.editorDraft = emptyGame;
  state.editingOriginHash = null;
+ state.editorInitialHash = emptyGame.hash;
  state.screen = 'EDITOR';
  setAccent(state.editorDraft.color);
  render();
@@ -2176,6 +2182,7 @@ function openEditorByHash(hash, e) {
  Haptics.tap();
  state.editorDraft = normalizeGameObject(target);
  state.editingOriginHash = target.hash;
+ state.editorInitialHash = state.editorDraft.hash;
  state.screen = 'EDITOR';
  setAccent(state.editorDraft.color);
  render();
@@ -2191,6 +2198,7 @@ async function openEditorFromPregame() {
  }
  state.editorDraft = normalizeGameObject(targetGame);
  state.editingOriginHash = targetGame.hash;
+ state.editorInitialHash = state.editorDraft.hash;
  state.screen = 'EDITOR';
  setAccent(state.editorDraft.color);
  render();
@@ -2284,11 +2292,20 @@ function exitEditorWithoutSaving() {
  }
 }
 
+function isEditorDirty() {
+ if (!state.editorDraft) return false;
+ return state.editorDraft.hash !== state.editorInitialHash;
+}
+
 function updateDraftHashBadge() {
  if (!state.editorDraft) return;
  state.editorDraft.hash = computeCanonicalHash(state.editorDraft);
  const badge = document.getElementById('draft-hash-badge');
  if (badge) badge.textContent = `#${state.editorDraft.hash}`;
+ const saveBtn = document.getElementById('editor-save-btn');
+ if (saveBtn) {
+ saveBtn.classList.toggle('btn-confirm', isEditorDirty());
+ }
 }
 
 function cycleItemColor(currentKey) {
@@ -2658,14 +2675,19 @@ function render() {
  (BASE_GAME.finals && BASE_GAME.finals.length > 0);
 
  // --------------------------------------------------------------------------
- // 0. HOME KATALOGAS: LOGO -> ADD GAME (+) -> TAB'AI -> SĄRAŠAS (BE SHARE)
+ // 0. HOME KATALOGAS: LOGO -> ADD GAME (+) -> TAB'AI (PUB, FAV, MY, RECENT)
  // --------------------------------------------------------------------------
  if (state.screen === 'HOME') {
- const tab = state.catalogTab || 'my';
+ const tab = state.catalogTab || 'pub';
  let listContentHtml = '';
 
- if (tab === 'my') {
+ if (tab === 'pub') {
+ listContentHtml = PUBLIC_GAMES.map(g => renderCatalogRowFavOnly(g, false, '{ isPublic: true }')).join('');
+ } else if (tab === 'fav') {
+ listContentHtml = state.favGames.map(g => renderCatalogRowFavOnly(g, true)).join('');
+ } else if (tab === 'my') {
  listContentHtml = state.myGames.map(g => {
+ const faved = isFavorited(g.hash);
  return `
  <div id="my-card-${g.hash}"
  class="catalog-card"
@@ -2686,14 +2708,13 @@ function render() {
  onpointercancel="HoldEngine.release()">
  <i class="fa-solid fa-trash"></i>
  </button>
+ <button class="xs ${faved ? 'star-active' : ''}" onclick="toggleFavoriteGame('${g.hash}', event)">
+ <i class="${faved ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+ </button>
  </div>
  </div>
  `;
  }).join('');
- } else if (tab === 'fav') {
- listContentHtml = state.favGames.map(g => renderCatalogRowFavOnly(g, true)).join('');
- } else if (tab === 'pub') {
- listContentHtml = PUBLIC_GAMES.map(g => renderCatalogRowFavOnly(g, false, '{ isPublic: true }')).join('');
  } else if (tab === 'recent') {
  listContentHtml = state.recentGames.map(g => renderCatalogRowFavOnly(g, false)).join('');
  }
@@ -2709,17 +2730,17 @@ function render() {
  </button>
 
  <div class="catalog-tabs">
- <button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')">
- <i class="fa-solid fa-floppy-disk"></i>
- <span class="catalog-tab-count">${state.myGames.length}</span>
+ <button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')">
+ <i class="fa-solid fa-globe"></i>
+ <span class="catalog-tab-count">${PUBLIC_GAMES.length}</span>
  </button>
  <button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')">
  <i class="fa-solid fa-star"></i>
  <span class="catalog-tab-count">${state.favGames.length}</span>
  </button>
- <button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')">
- <i class="fa-solid fa-globe"></i>
- <span class="catalog-tab-count">${PUBLIC_GAMES.length}</span>
+ <button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')">
+ <i class="fa-solid fa-floppy-disk"></i>
+ <span class="catalog-tab-count">${state.myGames.length}</span>
  </button>
  <button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')">
  <i class="fa-solid fa-clock-rotate-left"></i>
@@ -2749,6 +2770,7 @@ function render() {
  let modeControlsHtml = '';
  const isSavedInMyGames = isInMyGames(BASE_GAME.hash);
  const showEditButton = isSavedInMyGames || state.currentGameIsPublic;
+ const isFaved = isFavorited(BASE_GAME.hash);
  const isCopied = state.copiedShareHash === BASE_GAME.hash;
 
  if (hasCards) {
@@ -2794,6 +2816,9 @@ function render() {
  <button class="sm" onclick="SoundEngine.toggleMute()">
  <i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>
  </button>
+ <button class="sm ${isFaved ? 'star-active' : ''}" onclick="toggleFavoriteGame('${BASE_GAME.hash}', event)">
+ <i class="${isFaved ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+ </button>
  <button class="sm ${isCopied ? 'copied-check' : ''}" onclick="shareCurrentGame(event)">
  <i class="fa-solid ${isCopied ? 'fa-check' : 'fa-share-nodes'}"></i>
  </button>
@@ -2825,6 +2850,7 @@ function render() {
  // --------------------------------------------------------------------------
  if (state.screen === 'EDITOR' && state.editorDraft) {
  const d = state.editorDraft;
+ const dirty = isEditorDirty();
 
  const paletteHtml = COLOR_KEYS.map(ck => `
  <div class="color-swatch ${d.color === ck ? 'selected' : ''}"
@@ -2955,7 +2981,9 @@ function render() {
  <div class="top-bar">
  <button class="sm" onclick="exitEditorWithoutSaving()"><i class="fa-solid fa-arrow-left"></i></button>
  <div class="top-actions">
- <button class="sm btn-confirm" onclick="saveEditorChanges()"><i class="fa-solid fa-check"></i></button>
+ <button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()">
+ <i class="fa-solid fa-floppy-disk"></i>
+ </button>
  </div>
  </div>
 
@@ -3086,12 +3114,23 @@ function render() {
  // --------------------------------------------------------------------------
  if (state.screen === 'DEAL_DONE') {
  app.innerHTML = `
- <div class="top-bar"></div>
+ <div class="top-bar">
+ <button id="cancel-hold-btn"
+ class="sm hold-btn"
+ style="--hold-color: var(--c-red)"
+ oncontextmenu="return false;"
+ onpointerdown="startCancelHold(event)"
+ onpointerup="HoldEngine.release()"
+ onpointerleave="HoldEngine.release()"
+ onpointercancel="HoldEngine.release()">
+ <i class="fa-solid fa-xmark"></i>
+ </button>
+ <div></div>
+ </div>
  <div class="card-stage">
  <div class="action-row">
  <button class="lg" onclick="startDealing()"><i class="fa-solid fa-arrows-rotate"></i></button>
  ${hasPhasesOrFinals ? `<button class="lg" onclick="startPhases()"><i class="fa-solid fa-play"></i></button>` : ''}
- <button class="lg" onclick="Haptics.tap(); goToPregame()"><i class="fa-solid fa-xmark"></i></button>
  </div>
  </div>
  <div class="bottom-bar"></div>
