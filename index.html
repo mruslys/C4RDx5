@@ -157,7 +157,7 @@
  .top-bar.catalog-brand-bar {
  justify-content: center;
  min-height: 48px;
- margin-bottom: 2px;
+ margin-bottom: 6px;
  }
  .catalog-brand-logo {
  width: 96px;
@@ -188,6 +188,13 @@
  position: relative;
  z-index: 130;
  pointer-events: none;
+ }
+ .bottom-bar.floating-bottom {
+ position: fixed;
+ bottom: 18px;
+ left: 18px;
+ right: 18px;
+ margin: 0 auto;
  }
  .action-row {
  display: flex;
@@ -255,7 +262,7 @@
  }
 
  /* =========================================================================
- 1. HOME KATALOGAS (ADD MYGTUKAS + TAB'Ų ARCHITEKTŪRA)
+ 1. HOME KATALOGAS (TAB'Ų ARCHITEKTŪRA + PLAUKIOJANTYS APATINIAI MYGTUKAI)
  ========================================================================= */
  .catalog-wrap {
  width: 100%;
@@ -265,31 +272,8 @@
  display: flex;
  flex-direction: column;
  gap: 10px;
- padding: 2px 2px 12px 2px;
- }
- .catalog-add-btn {
- width: 100%;
- height: 46px;
- border-radius: 14px;
- border: 1px dashed var(--border);
- background: rgba(26, 31, 46, 0.55);
- color: var(--text);
- font-size: 1.2rem;
- display: flex;
- align-items: center;
- justify-content: center;
- cursor: pointer;
- flex-shrink: 0;
- box-shadow: none;
- transition: transform 0.14s ease, border-color 0.2s, color 0.2s, background 0.2s;
- }
- .catalog-add-btn:hover {
- border-color: var(--accent);
- color: var(--accent);
- background: rgba(59, 130, 246, 0.08);
- }
- .catalog-add-btn:active {
- transform: scale(0.985);
+ padding: 2px 2px 0 2px;
+ margin-bottom: -18px;
  }
  .catalog-tabs {
  display: grid;
@@ -335,10 +319,11 @@
  flex: 1;
  min-height: 0;
  overflow-y: auto;
+ -webkit-overflow-scrolling: touch;
  display: flex;
  flex-direction: column;
  gap: 8px;
- padding-bottom: 16px;
+ padding-bottom: 120px;
  }
  .catalog-list {
  display: flex;
@@ -1899,6 +1884,13 @@ function navigateToHomeUrl() {
  window.location.href = getBaseShareUrl();
 }
 
+function openRandomPublicGame() {
+ if (!PUBLIC_GAMES || PUBLIC_GAMES.length === 0) return;
+ Haptics.tap();
+ const randIdx = Math.floor(Math.random() * PUBLIC_GAMES.length);
+ openGameSession(PUBLIC_GAMES[randIdx], { isPublic: true });
+}
+
 async function openGameSession(gameObj, options = {}) {
  BASE_GAME = normalizeGameObject(gameObj);
  state.currentGameIsPublic = (typeof options.isPublic === 'boolean')
@@ -2807,7 +2799,7 @@ function render() {
  (BASE_GAME.finals && BASE_GAME.finals.length > 0);
 
  // --------------------------------------------------------------------------
- // 0. HOME KATALOGAS: LOGO -> ADD GAME (+) -> TAB'AI (PUB, FAV, RECENT, MY)
+ // 0. HOME KATALOGAS: LOGO -> TAB'AI -> SĄRAŠAS -> PLAUKIOJANTYS (DICE + PLUS)
  // --------------------------------------------------------------------------
  if (state.screen === 'HOME') {
  const tab = state.catalogTab || 'pub';
@@ -2838,6 +2830,8 @@ function render() {
  }
 
  app.innerHTML = `
+ <div class="edge-fade-bottom"></div>
+
  <div class="top-bar catalog-brand-bar">
  <img src="https://mruslys.github.io/amongai/f/favicon-96x96.png"
  alt="C4RDx5"
@@ -2846,10 +2840,6 @@ function render() {
  </div>
 
  <div class="catalog-wrap">
- <button class="catalog-add-btn" onclick="openEditorForNew()">
- <i class="fa-solid fa-plus"></i>
- </button>
-
  <div class="catalog-tabs">
  <button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')">
  <i class="fa-solid fa-globe"></i>
@@ -2874,7 +2864,16 @@ function render() {
  </div>
  </div>
 
- <div class="bottom-bar"></div>
+ <div class="bottom-bar floating-bottom">
+ <div class="action-row">
+ <button class="lg" onclick="openRandomPublicGame()">
+ <i class="fa-solid fa-dice"></i>
+ </button>
+ <button class="lg" onclick="openEditorForNew()">
+ <i class="fa-solid fa-plus"></i>
+ </button>
+ </div>
+ </div>
  `;
  const nextCatalogPanel = app.querySelector('.catalog-panel');
  if (nextCatalogPanel && savedCatalogScroll > 0) {
