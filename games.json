@@ -1,0 +1,239 @@
+[
+  {
+    "title": "AmongAI",
+    "color": "blue",
+    "groups": [
+      {
+        "id": "g1",
+        "title": "Geriečiai",
+        "color": "blue"
+      },
+      {
+        "id": "g2",
+        "title": "Blogiečiai",
+        "color": "red"
+      },
+      {
+        "id": "g3",
+        "title": "Speciali rolė",
+        "color": "amber"
+      }
+    ],
+    "cards": [
+      {
+        "id": "c1",
+        "title": "Žmogus",
+        "groupId": "g1"
+      },
+      {
+        "id": "c2",
+        "title": "Gydytojas",
+        "groupId": "g1"
+      },
+      {
+        "id": "c3",
+        "title": "Teisėjas",
+        "groupId": "g1"
+      },
+      {
+        "id": "c4",
+        "title": "Policininkas",
+        "groupId": "g1"
+      },
+      {
+        "id": "c5",
+        "title": "Imposteris",
+        "groupId": "g2"
+      },
+      {
+        "id": "c6",
+        "title": "Trintukas",
+        "groupId": "g2"
+      },
+      {
+        "id": "c7",
+        "title": "Ligonis",
+        "groupId": "g2"
+      },
+      {
+        "id": "c8",
+        "title": "Džakalas",
+        "groupId": "g3"
+      }
+    ],
+    "phases": [
+      {
+        "id": "p1",
+        "title": "Susipažinimas",
+        "color": "purple",
+        "loop": false,
+        "duration": 20,
+        "fxAlarm": false
+      },
+      {
+        "id": "p2",
+        "title": "Užduotys ir veiksmas",
+        "color": "blue",
+        "loop": true,
+        "duration": 120,
+        "fxAlarm": true
+      },
+      {
+        "id": "p3",
+        "title": "Skubus susirinkimas",
+        "color": "amber",
+        "loop": true,
+        "duration": 90,
+        "fxAlarm": false
+      }
+    ],
+    "finals": [
+      {
+        "id": "f1",
+        "title": "Žmonių pergalė",
+        "color": "blue"
+      },
+      {
+        "id": "f2",
+        "title": "Imposterių pergalė",
+        "color": "red"
+      },
+      {
+        "id": "f3",
+        "title": "Džakalo pergalė",
+        "color": "amber"
+      }
+    ]
+  },
+  {
+    "title": "Mafija",
+    "color": "red",
+    "groups": [
+      {
+        "id": "g1",
+        "title": "Mafija",
+        "color": "red"
+      },
+      {
+        "id": "g2",
+        "title": "Miestiečiai",
+        "color": "blue"
+      }
+    ],
+    "cards": [
+      {
+        "id": "c1",
+        "title": "Mafija",
+        "groupId": "g1"
+      },
+      {
+        "id": "c2",
+        "title": "Donas",
+        "groupId": "g1"
+      },
+      {
+        "id": "c3",
+        "title": "Komisaras",
+        "groupId": "g2"
+      },
+      {
+        "id": "c4",
+        "title": "Gydytojas",
+        "groupId": "g2"
+      },
+      {
+        "id": "c5",
+        "title": "Miestietis",
+        "groupId": "g2"
+      }
+    ],
+    "phases": [
+      {
+        "id": "p1",
+        "title": "Susipažinimo naktis",
+        "color": "purple",
+        "loop": false,
+        "duration": 30,
+        "fxAlarm": false
+      },
+      {
+        "id": "p2",
+        "title": "Diena: Diskusija",
+        "color": "amber",
+        "loop": true,
+        "duration": 180,
+        "fxAlarm": true
+      },
+      {
+        "id": "p3",
+        "title": "Naktis: Medžioklė",
+        "color": "blue",
+        "loop": true,
+        "duration": 45,
+        "fxAlarm": false
+      }
+    ],
+    "finals": [
+      {
+        "id": "f1",
+        "title": "Miesto pergalė",
+        "color": "emerald"
+      },
+      {
+        "id": "f2",
+        "title": "Mafijos pergalė",
+        "color": "red"
+      }
+    ]
+  },
+  {
+    "title": "Šnipas",
+    "color": "emerald",
+    "groups": [
+      {
+        "id": "g1",
+        "title": "Šnipai",
+        "color": "red"
+      },
+      {
+        "id": "g2",
+        "title": "Agentai",
+        "color": "emerald"
+      }
+    ],
+    "cards": [
+      {
+        "id": "c1",
+        "title": "Šnipas",
+        "groupId": "g1"
+      },
+      {
+        "id": "c2",
+        "title": "Agentas",
+        "groupId": "g2"
+      }
+    ],
+    "phases": [
+      {
+        "id": "p1",
+        "title": "Apklausa",
+        "color": "emerald",
+        "loop": false,
+        "duration": 300,
+        "fxAlarm": true
+      }
+    ],
+    "finals": [
+      {
+        "id": "f1",
+        "title": "Agentų pergalė",
+        "color": "emerald"
+      },
+      {
+        "id": "f2",
+        "title": "Šnipo pergalė",
+        "color": "red"
+      }
+    ]
+  }
+]
