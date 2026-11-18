@@ -1015,12 +1015,16 @@ function renderEditor(app, savedScroll) {
       const isNone = resolvedColorKey === 'none'; 
       const isWhite = resolvedColorKey === 'white'; 
       const itemColorCss = getColorCss(resolvedColorKey, 'var(--border)'); 
+      
+      // Nustatome teksto spalvą: jei grupė be spalvos, paliekame prigesintą (muted), kitu atveju - imame iš paletės
+      const groupTextColor = isNone ? 'var(--muted)' : PALETTE[resolvedColorKey];
+ 
       return `<div id="ed-item-card-${i}" class="editor-item" style="--item-color: ${itemColorCss}">
           <div class="editor-item-main">
               <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" title="${grp ? escapeHtml(grp.title) : 'Be grupės'}" style="background: ${isNone ? 'transparent' : PALETTE[resolvedColorKey]}" onpointerdown="event.preventDefault()" onclick="cycleCardGroupInEditor(${i})"><i class="fa-solid fa-user-group"></i></div>
               <div style="display: flex; flex-direction: column; flex: 1; gap: 4px; min-width: 0;">
                   <input class="text-input" value="${escapeHtml(c.title)}" placeholder="Rolės pavadinimas" oninput="state.editorDraft.cards[${i}].title = this.value; updateDraftHashBadge();" />
-                  <span style="font-size: 0.78rem; font-weight: 600; color: var(--muted); padding-left: 2px;">${grp ? escapeHtml(grp.title) : 'Be grupės'}</span>
+                  <span style="font-size: 0.78rem; font-weight: 600; color: ${groupTextColor}; padding-left: 12px;">${grp ? escapeHtml(grp.title) : 'Be grupės'}</span>
               </div>
               <button id="ed-del-card-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('card', ${i}, event)"><i class="fa-solid fa-trash"></i></button>
           </div>
