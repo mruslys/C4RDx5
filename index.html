@@ -70,7 +70,7 @@
  .bottom-bar { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 14px; align-items: center; padding-bottom: 6px; flex-shrink: 0; position: relative; z-index: 130; pointer-events: none; }
  .bottom-bar.floating-bottom { position: fixed; bottom: 18px; left: 0; right: 0; width: 100%; max-width: 540px; margin: 0 auto; padding: 0 18px 6px 18px; }
  .action-row { display: flex; gap: 20px; justify-content: center; align-items: center; width: 100%; pointer-events: none; }
- .action-row > *, .finals-tray { pointer-events: auto; }
+ .action-row > *, .finals-tray, .phase-aux > * { pointer-events: auto; }
 
  button { background: rgba(18, 21, 31, 0.84); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 2px solid var(--border-float); color: var(--text); border-radius: 50%; width: 62px; height: 62px; font-size: 1.4rem; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 22px -4px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.04); transition: transform 0.1s, border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s; padding: 0; }
  button:active { transform: scale(0.92); }
@@ -123,13 +123,17 @@
  .card-face-title { font-size: 2.2rem; font-weight: 800; line-height: 1.25; word-break: break-word; color: var(--card-text-color, var(--text)); text-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9); }
  .return-btn-wrap { position: fixed; bottom: 32px; left: 0; right: 0; z-index: 25; display: flex; justify-content: center; pointer-events: none; }
 
- .phase-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; width: 100%; }
+ .phase-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 540px; min-height: 0; }
+ .phase-spacer-top { flex: 1; width: 100%; min-height: 8px; }
+ .phase-core { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; }
  .phase-title { font-size: 1.9rem; font-weight: 700; color: var(--accent); max-width: 90%; }
- .timer-display { font-size: clamp(4rem, 17vw, 6.2rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; }
+ .timer-display { font-size: clamp(4rem, 17vw, 6.2rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.05; white-space: nowrap; }
+ .phase-elapsed { font-size: 1.15rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0.06em; opacity: 0.78; margin-top: -2px; }
  .timer-blink { color: var(--c-red); animation: blinkTxt 0.5s infinite alternate; }
  @keyframes blinkTxt { from { opacity: 1; } to { opacity: 0.2; } }
 
- .finals-tray { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--border); width: 100%; position: relative; z-index: 130; }
+ .phase-aux { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 10px 0; min-height: 8px; position: relative; z-index: 130; pointer-events: none; }
+ .finals-tray { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; width: 100%; position: relative; z-index: 130; }
  .final-token { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--token-color); color: var(--token-color); font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px -3px var(--token-color); background: #141824; touch-action: none; position: relative; transition: transform 0.15s, box-shadow 0.15s; }
  .final-token.holding { transform: scale(1.16); box-shadow: 0 0 28px var(--token-color); }
 
@@ -573,7 +577,7 @@ const state = {
  customCounts: {},
  editorDraft: null, editingOriginHash: null, editorInitialHash: null,
  deck: [], dealIndex: 0, cardFaceUp: false, currentCard: null,
- phaseIndex: 0, firstLap: true, timeLeft: 0, timerRunning: false, timerInterval: null, timerAccumulatedMs: 0, timerLastResumeTs: 0, phaseEndTriggered: false, alarmActive: false,
+ phaseIndex: 0, firstLap: true, timeLeft: 0, elapsedSec: 0, phaseStartTs: 0, timerInterval: null, phaseEndTriggered: false, alarmActive: false,
  activeFinal: null
 };
 
@@ -941,37 +945,43 @@ function triggerPhaseStartEffect() {
 function loadCurrentPhase() {
  HoldEngine.reset(); stopPhaseTimer(); SoundEngine.stopSiren(); SoundEngine.startKeepAlive(); clearAppEffects(); state.alarmActive = false;
  const hasPhases = state.baseGame.phases && state.baseGame.phases.length > 0;
- if (!hasPhases) { setAccent(state.baseGame.color); state.timeLeft = 0; state.timerAccumulatedMs = 0; state.timerLastResumeTs = performance.now(); state.phaseEndTriggered = false; state.timerRunning = true; startPhaseTimer(0); render(); return; }
+ if (!hasPhases) {
+ setAccent(state.baseGame.color); state.timeLeft = 0; state.elapsedSec = 0; state.phaseStartTs = performance.now(); state.phaseEndTriggered = false;
+ startPhaseTimer(0); render(); return;
+ }
  const phase = state.baseGame.phases[state.phaseIndex]; setAccent(phase.color);
  triggerPhaseStartEffect(); Haptics.phaseStart(); SoundEngine.playPhaseStart();
  const durationSec = (phase.duration && phase.duration > 0) ? Number(phase.duration) : 0;
- state.timeLeft = durationSec; state.timerAccumulatedMs = 0; state.timerLastResumeTs = performance.now(); state.phaseEndTriggered = false; state.timerRunning = true;
+ state.timeLeft = durationSec; state.elapsedSec = 0; state.phaseStartTs = performance.now(); state.phaseEndTriggered = false;
  startPhaseTimer(durationSec); render();
 }
 function startPhaseTimer(durationSec) {
- stopPhaseTimer(); const isCountdown = durationSec > 0;
+ stopPhaseTimer();
+ const hasLimit = durationSec > 0;
  state.timerInterval = setInterval(() => {
- if (!state.timerRunning) return;
- const now = performance.now(); const totalElapsedMs = state.timerAccumulatedMs + Math.max(0, now - state.timerLastResumeTs); const elapsedSec = Math.floor(totalElapsedMs / 1000);
- if (isCountdown) {
+ const elapsedSec = Math.floor(Math.max(0, performance.now() - state.phaseStartTs) / 1000);
+ let changed = false;
+ if (elapsedSec !== state.elapsedSec) {
+ state.elapsedSec = elapsedSec;
+ changed = true;
+ }
+ if (hasLimit) {
  const nextLeft = Math.max(0, durationSec - elapsedSec);
  if (nextLeft !== state.timeLeft) {
  state.timeLeft = nextLeft;
+ changed = true;
  if (state.timeLeft > 0 && state.timeLeft <= 5) { Haptics.tick(); SoundEngine.playTick(); }
- if (state.timeLeft === 0 && !state.phaseEndTriggered) { state.phaseEndTriggered = true; document.getElementById('app').classList.add('fx-end'); Haptics.phaseEnd(); SoundEngine.playPhaseEnd(); }
- renderTimerOnly();
+ if (state.timeLeft === 0 && !state.phaseEndTriggered) {
+ state.phaseEndTriggered = true;
+ document.getElementById('app').classList.add('fx-end');
+ Haptics.phaseEnd(); SoundEngine.playPhaseEnd();
  }
- } else {
- if (elapsedSec !== state.timeLeft) { state.timeLeft = elapsedSec; renderTimerOnly(); }
  }
+ }
+ if (changed) renderTimerOnly();
  }, 200);
 }
 function stopPhaseTimer() { if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; } }
-function togglePausePhase() {
- Haptics.tap(); SoundEngine.ensureContext();
- if (state.timerRunning) { state.timerAccumulatedMs += Math.max(0, performance.now() - state.timerLastResumeTs); state.timerRunning = false; } else { state.timerLastResumeTs = performance.now(); state.timerRunning = true; }
- render();
-}
 function triggerAlarm() {
  SoundEngine.unlock(); state.alarmActive = !state.alarmActive; const app = document.getElementById('app'); app.classList.toggle('fx-alarm', state.alarmActive);
  if (state.alarmActive) { Haptics.alarm(); SoundEngine.startSiren(); } else { Haptics.tap(); SoundEngine.stopSiren(); }
@@ -989,9 +999,21 @@ function formatTime(sec) { const m = String(Math.floor(sec / 60)).padStart(2, '0
 function escapeHtml(str) { return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
 function renderTimerOnly() {
- const el = document.getElementById('timer-val'); const nextBtn = document.getElementById('next-phase-btn'); if (!el) { render(); return; }
- const phase = (state.baseGame.phases || [])[state.phaseIndex]; const isZero = phase && phase.duration > 0 && state.timeLeft === 0;
- el.textContent = formatTime(state.timeLeft); el.classList.toggle('timer-blink', Boolean(isZero)); if (nextBtn) nextBtn.classList.toggle('pulse-btn', Boolean(isZero));
+ const el = document.getElementById('timer-val');
+ const elapsedEl = document.getElementById('elapsed-val');
+ const nextBtn = document.getElementById('next-phase-btn');
+ if (!el || !elapsedEl) { render(); return; }
+ const phase = (state.baseGame.phases || [])[state.phaseIndex];
+ const hasLimit = Boolean(phase && phase.duration > 0);
+ const isZero = hasLimit && state.timeLeft === 0;
+ el.textContent = hasLimit ? formatTime(state.timeLeft) : '- - : - -';
+ el.classList.toggle('timer-blink', isZero);
+ elapsedEl.textContent = formatTime(state.elapsedSec);
+ if (nextBtn) {
+ nextBtn.classList.toggle('pulse-btn', isZero);
+ const iconEl = nextBtn.querySelector('i');
+ if (iconEl) iconEl.className = `fa-solid ${(hasLimit && !isZero) ? 'fa-forward' : 'fa-check'}`;
+ }
 }
 function openGameByHashFromList(hash, options = {}) { Haptics.tap(); const g = findGameAnySourceByHash(hash); if (g) openGameSession(g, options); }
 function renderCatalogRowFavOnly(g, forceStarActive = false, extraOptions = null) {
@@ -1067,10 +1089,15 @@ function renderDealDone(app) {
 function renderPhase(app) {
  const phases = state.baseGame.phases || []; const hasPhases = phases.length > 0;
  const currentPhase = hasPhases ? phases[state.phaseIndex] : null; const title = currentPhase ? currentPhase.title : state.baseGame.title;
- const isZero = currentPhase && currentPhase.duration > 0 && state.timeLeft === 0; const canAdvance = hasPhases && getNextPhaseIndex() !== -1;
- const showFinals = currentPhase && currentPhase.winner && state.baseGame.finals && state.baseGame.finals.length > 0;
+ const hasLimit = Boolean(currentPhase && currentPhase.duration > 0);
+ const isZero = hasLimit && state.timeLeft === 0;
+ const canAdvance = hasPhases && getNextPhaseIndex() !== -1;
+ const nextIcon = (hasLimit && !isZero) ? 'fa-forward' : 'fa-check';
+ const showAlarm = Boolean(currentPhase && currentPhase.fxAlarm);
+ const showFinals = Boolean(currentPhase && currentPhase.winner && state.baseGame.finals && state.baseGame.finals.length > 0);
+ const alarmHtml = showAlarm ? `<button class="danger ${state.alarmActive ? 'active-alarm' : ''}" onclick="triggerAlarm()"><i class="fa-solid fa-bullhorn"></i></button>` : '';
  const finalsHtml = showFinals ? `<div class="finals-tray">${state.baseGame.finals.map((f, idx) => `<button id="final-token-${idx}" class="final-token ${HoldEngine.activeKey === 'final:' + idx && HoldEngine.isHolding ? 'holding' : ''}" style="--token-color: ${getColorCss(f.color, 'var(--text)')}" oncontextmenu="return false;" onpointerdown="startFinalHold(${idx}, event)"><i class="fa-solid fa-trophy"></i></button>`).join('')}</div>` : '';
- app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${isZero ? 'timer-blink' : ''}">${formatTime(state.timeLeft)}</div></div><div class="bottom-bar"><div class="action-row"><button onclick="togglePausePhase()"><i class="fa-solid ${state.timerRunning ? 'fa-pause' : 'fa-play'}"></i></button>${currentPhase && currentPhase.fxAlarm ? `<button class="danger ${state.alarmActive ? 'active-alarm' : ''}" onclick="triggerAlarm()"><i class="fa-solid fa-bullhorn"></i></button>` : ''}${canAdvance ? `<button id="next-phase-btn" class="${isZero ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid fa-forward-step"></i></button>` : ''}</div>${finalsHtml}</div>`;
+ app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-spacer-top"></div><div class="phase-core"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${isZero ? 'timer-blink' : ''}">${hasLimit ? formatTime(state.timeLeft) : '- - : - -'}</div><div id="elapsed-val" class="phase-elapsed">${formatTime(state.elapsedSec)}</div></div><div class="phase-aux">${alarmHtml}${finalsHtml}</div></div><div class="bottom-bar"><div class="action-row">${canAdvance ? `<button id="next-phase-btn" class="${isZero ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid ${nextIcon}"></i></button>` : ''}</div></div>`;
 }
 
 function renderFinal(app) {
