@@ -68,7 +68,8 @@
         "color": "purple",
         "loop": false,
         "duration": 20,
-        "fxAlarm": false
+        "fxAlarm": false,
+        "winner": false
       },
       {
         "id": "p2",
@@ -76,7 +77,8 @@
         "color": "blue",
         "loop": true,
         "duration": 120,
-        "fxAlarm": true
+        "fxAlarm": true,
+        "winner": true
       },
       {
         "id": "p3",
@@ -84,7 +86,8 @@
         "color": "amber",
         "loop": true,
         "duration": 90,
-        "fxAlarm": false
+        "fxAlarm": false,
+        "winner": true
       }
     ],
     "finals": [
@@ -154,7 +157,8 @@
         "color": "purple",
         "loop": false,
         "duration": 30,
-        "fxAlarm": false
+        "fxAlarm": false,
+        "winner": false
       },
       {
         "id": "p2",
@@ -162,7 +166,8 @@
         "color": "amber",
         "loop": true,
         "duration": 180,
-        "fxAlarm": true
+        "fxAlarm": true,
+        "winner": true
       },
       {
         "id": "p3",
@@ -170,7 +175,8 @@
         "color": "blue",
         "loop": true,
         "duration": 45,
-        "fxAlarm": false
+        "fxAlarm": false,
+        "winner": true
       }
     ],
     "finals": [
@@ -220,7 +226,8 @@
         "color": "emerald",
         "loop": false,
         "duration": 300,
-        "fxAlarm": true
+        "fxAlarm": true,
+        "winner": true
       }
     ],
     "finals": [
