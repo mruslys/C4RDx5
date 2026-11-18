@@ -1,6 +1,6 @@
 [
   {
-    "title": "AmongAI",
+    "title": "Amongai",
     "color": "blue",
     "groups": [
       {
@@ -64,28 +64,19 @@
     "phases": [
       {
         "id": "p1",
-        "title": "Susipažinimas",
+        "title": "Misija",
         "color": "purple",
         "loop": false,
-        "duration": 20,
-        "fxAlarm": false,
+        "duration": 180,
+        "fxAlarm": true,
         "winner": false
       },
       {
         "id": "p2",
-        "title": "Užduotys ir veiksmas",
+        "title": "Susirinkimas",
         "color": "blue",
         "loop": true,
-        "duration": 120,
-        "fxAlarm": true,
-        "winner": true
-      },
-      {
-        "id": "p3",
-        "title": "Skubus susirinkimas",
-        "color": "amber",
-        "loop": true,
-        "duration": 90,
+        "duration": 60,
         "fxAlarm": false,
         "winner": true
       }
