@@ -115,21 +115,22 @@
  .stepper span { font-size: 1.15rem; font-weight: 700; min-width: 24px; text-align: center; }
 
  .card-stage { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; }
- .playing-card { position: fixed; inset: 0; width: 100%; height: 100%; border-radius: 0; border: none; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--card-color, var(--accent)) 14%, var(--surface)), var(--bg) 85%); box-shadow: inset 0 0 28px -12px var(--card-color, var(--accent)); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 84px 24px 110px 24px; text-align: center; cursor: pointer; z-index: 20; transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1); }
+ .playing-card { position: fixed; inset: 0; width: 100%; height: 100%; border-radius: 0; border: none; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--card-color, var(--accent)) 14%, var(--surface)), var(--bg) 85%); box-shadow: inset 0 0 28px -12px var(--card-color, var(--accent)); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 84px 24px; text-align: center; cursor: pointer; z-index: 20; transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1); }
  .playing-card:active { transform: none; }
  .playing-card.face-down { background: repeating-linear-gradient(135deg, #0d1017, #0d1017 16px, #141824 16px, #141824 32px); box-shadow: none; }
  .card-back-emblem { width: 82px; height: 82px; border-radius: 50%; border: 3px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 2.1rem; color: var(--accent); box-shadow: 0 0 22px -4px var(--accent); background: rgba(9, 10, 15, 0.75); }
  .card-face-group { font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; padding: 4px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); max-width: 100%; word-break: break-word; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
  .card-face-title { font-size: 2.2rem; font-weight: 800; line-height: 1.25; word-break: break-word; color: var(--card-text-color, var(--text)); text-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9); }
+ .card-check-btn { margin-top: 28px; pointer-events: none; flex-shrink: 0; }
  .return-btn-wrap { position: fixed; bottom: 32px; left: 0; right: 0; z-index: 25; display: flex; justify-content: center; pointer-events: none; }
 
  .phase-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 540px; min-height: 0; }
  .phase-spacer-top { flex: 1; width: 100%; min-height: 8px; }
- .phase-core { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+ .phase-core { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; }
  .phase-title { font-size: 1.9rem; font-weight: 700; color: var(--accent); max-width: 90%; }
  .timer-display { font-size: clamp(4rem, 17vw, 6.2rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.05; white-space: nowrap; }
- .phase-elapsed { font-size: 1.15rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0.06em; opacity: 0.78; margin-top: -2px; }
  .timer-blink { color: var(--c-red); animation: blinkTxt 0.5s infinite alternate; }
+ .timer-overdue { color: var(--c-red); }
  @keyframes blinkTxt { from { opacity: 1; } to { opacity: 0.2; } }
 
  .phase-aux { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 10px 0; min-height: 8px; position: relative; z-index: 130; pointer-events: none; }
@@ -183,6 +184,7 @@
 const APP_DEFAULT_TITLE = 'C4RDx5 — Universalus žaidimų moderatorius';
 const MAX_RECENT_GAMES = 5;
 const SESSION_TTL_MS = 6 * 60 * 60 * 1000;
+const ZERO_BLINK_SEC = 3;
 
 function getGameTitleWithHash(gameObj) {
  if (!gameObj) return APP_DEFAULT_TITLE;
@@ -998,21 +1000,59 @@ function clearAppEffects() { if (state.fxStartTimer) { clearTimeout(state.fxStar
 function formatTime(sec) { const m = String(Math.floor(sec / 60)).padStart(2, '0'); const s = String(sec % 60).padStart(2, '0'); return `${m}:${s}`; }
 function escapeHtml(str) { return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
+function getPhaseTimerView() {
+ const phase = (state.baseGame.phases || [])[state.phaseIndex];
+ const durationSec = (phase && phase.duration > 0) ? Number(phase.duration) : 0;
+ const hasLimit = durationSec > 0;
+ if (!hasLimit) {
+ return {
+  text: formatTime(state.elapsedSec),
+  isExpired: false,
+  isBlinking: false,
+  isOverdue: false,
+  nextIcon: 'fa-check'
+ };
+ }
+ if (state.elapsedSec < durationSec) {
+ return {
+  text: formatTime(state.timeLeft),
+  isExpired: false,
+  isBlinking: false,
+  isOverdue: false,
+  nextIcon: 'fa-forward'
+ };
+ }
+ const overSec = state.elapsedSec - durationSec;
+ if (overSec < ZERO_BLINK_SEC) {
+ return {
+  text: '00:00',
+  isExpired: true,
+  isBlinking: true,
+  isOverdue: false,
+  nextIcon: 'fa-check'
+ };
+ }
+ return {
+ text: formatTime(overSec - ZERO_BLINK_SEC + 1),
+ isExpired: true,
+ isBlinking: false,
+ isOverdue: true,
+ nextIcon: 'fa-check'
+ };
+}
+
 function renderTimerOnly() {
  const el = document.getElementById('timer-val');
- const elapsedEl = document.getElementById('elapsed-val');
  const nextBtn = document.getElementById('next-phase-btn');
- if (!el || !elapsedEl) { render(); return; }
- const phase = (state.baseGame.phases || [])[state.phaseIndex];
- const hasLimit = Boolean(phase && phase.duration > 0);
- const isZero = hasLimit && state.timeLeft === 0;
- el.textContent = hasLimit ? formatTime(state.timeLeft) : '- - : - -';
- el.classList.toggle('timer-blink', isZero);
- elapsedEl.textContent = formatTime(state.elapsedSec);
+ if (!el) { render(); return; }
+ const tv = getPhaseTimerView();
+ el.textContent = tv.text;
+ el.classList.toggle('timer-blink', tv.isBlinking);
+ el.classList.toggle('timer-overdue', tv.isOverdue);
  if (nextBtn) {
- nextBtn.classList.toggle('pulse-btn', isZero);
+ nextBtn.classList.toggle('pulse-btn', tv.isExpired);
  const iconEl = nextBtn.querySelector('i');
- if (iconEl) iconEl.className = `fa-solid ${(hasLimit && !isZero) ? 'fa-forward' : 'fa-check'}`;
+ if (iconEl) iconEl.className = `fa-solid ${tv.nextIcon}`;
  }
 }
 function openGameByHashFromList(hash, options = {}) { Haptics.tap(); const g = findGameAnySourceByHash(hash); if (g) openGameSession(g, options); }
@@ -1078,26 +1118,24 @@ function renderDeal(app) {
  const resolvedCardColorKey = (state.cardFaceUp && state.currentCard) ? resolveCardColorKey(state.baseGame, state.currentCard) : state.baseGame.color;
  const cardColorCss = getColorCss(resolvedCardColorKey, 'var(--c-none)'); const cardTextColorCss = (resolvedCardColorKey === 'none') ? 'var(--text)' : PALETTE[resolvedCardColorKey];
  const cardGroup = (state.cardFaceUp && state.currentCard) ? getGroupById(state.baseGame, state.currentCard.groupId) : null;
- app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><div class="counter-pill" style="font-size:1.05rem; padding:6px 16px;">${state.dealIndex + 1}/${state.deck.length}</div><div style="width: 42px;"></div></div><div class="card-stage"><div class="playing-card ${state.cardFaceUp ? '' : 'face-down'}" style="--card-color: ${cardColorCss}; --card-text-color: ${cardTextColorCss}" onclick="handleCardTap()">${state.cardFaceUp ? `${cardGroup ? `<div class="card-face-group">${escapeHtml(cardGroup.title)}</div>` : ''}<div class="card-face-title">${escapeHtml(state.currentCard.title)}</div><div class="return-btn-wrap"><button class="lg" style="--accent: ${cardColorCss}; color: ${cardTextColorCss}; pointer-events: none;"><i class="fa-solid fa-check"></i></button></div>` : `<div class="card-back-emblem"><i class="fa-solid fa-masks-theater"></i></div>`}</div></div><div class="bottom-bar"></div>`;
+ app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><div class="counter-pill" style="font-size:1.05rem; padding:6px 16px;">${state.dealIndex + 1}/${state.deck.length}</div><div style="width: 42px;"></div></div><div class="card-stage"><div class="playing-card ${state.cardFaceUp ? '' : 'face-down'}" style="--card-color: ${cardColorCss}; --card-text-color: ${cardTextColorCss}" onclick="handleCardTap()">${state.cardFaceUp ? `${cardGroup ? `<div class="card-face-group">${escapeHtml(cardGroup.title)}</div>` : ''}<div class="card-face-title">${escapeHtml(state.currentCard.title)}</div><button class="lg card-check-btn" style="--accent: ${cardColorCss}; color: ${cardTextColorCss};"><i class="fa-solid fa-check"></i></button>` : `<div class="card-back-emblem"><i class="fa-solid fa-masks-theater"></i></div>`}</div></div><div class="bottom-bar"></div>`;
 }
 
 function renderDealDone(app) {
  const hasPhases = state.baseGame.phases && state.baseGame.phases.length > 0;
- app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><div></div></div><div class="card-stage"><div style="display: flex; flex-direction: column; gap: 24px; align-items: center; justify-content: center; width: 100%;">${hasPhases ? `<button class="lg" onclick="startPhases()"><i class="fa-solid fa-play"></i></button><button class="sm" style="color: var(--muted); border-color: var(--border);" onclick="startDealing()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="startDealing()"><i class="fa-solid fa-arrows-rotate"></i></button>`}</div></div><div class="bottom-bar"></div>`;
+ app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><div></div></div><div class="card-stage"><div style="display: flex; flex-direction: column; gap: 24px; align-items: center; justify-content: center; width: 100%;">${hasPhases ? `<button class="lg" onclick="startPhases()"><i class="fa-solid fa-play"></i></button>` : `<button class="lg" onclick="startDealing()"><i class="fa-solid fa-arrows-rotate"></i></button>`}</div></div><div class="bottom-bar"></div>`;
 }
 
 function renderPhase(app) {
  const phases = state.baseGame.phases || []; const hasPhases = phases.length > 0;
  const currentPhase = hasPhases ? phases[state.phaseIndex] : null; const title = currentPhase ? currentPhase.title : state.baseGame.title;
- const hasLimit = Boolean(currentPhase && currentPhase.duration > 0);
- const isZero = hasLimit && state.timeLeft === 0;
+ const tv = getPhaseTimerView();
  const canAdvance = hasPhases && getNextPhaseIndex() !== -1;
- const nextIcon = (hasLimit && !isZero) ? 'fa-forward' : 'fa-check';
  const showAlarm = Boolean(currentPhase && currentPhase.fxAlarm);
  const showFinals = Boolean(currentPhase && currentPhase.winner && state.baseGame.finals && state.baseGame.finals.length > 0);
  const alarmHtml = showAlarm ? `<button class="danger ${state.alarmActive ? 'active-alarm' : ''}" onclick="triggerAlarm()"><i class="fa-solid fa-bullhorn"></i></button>` : '';
  const finalsHtml = showFinals ? `<div class="finals-tray">${state.baseGame.finals.map((f, idx) => `<button id="final-token-${idx}" class="final-token ${HoldEngine.activeKey === 'final:' + idx && HoldEngine.isHolding ? 'holding' : ''}" style="--token-color: ${getColorCss(f.color, 'var(--text)')}" oncontextmenu="return false;" onpointerdown="startFinalHold(${idx}, event)"><i class="fa-solid fa-trophy"></i></button>`).join('')}</div>` : '';
- app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-spacer-top"></div><div class="phase-core"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${isZero ? 'timer-blink' : ''}">${hasLimit ? formatTime(state.timeLeft) : '- - : - -'}</div><div id="elapsed-val" class="phase-elapsed">${formatTime(state.elapsedSec)}</div></div><div class="phase-aux">${alarmHtml}${finalsHtml}</div></div><div class="bottom-bar"><div class="action-row">${canAdvance ? `<button id="next-phase-btn" class="${isZero ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid ${nextIcon}"></i></button>` : ''}</div></div>`;
+ app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-spacer-top"></div><div class="phase-core"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${tv.isBlinking ? 'timer-blink' : ''} ${tv.isOverdue ? 'timer-overdue' : ''}">${tv.text}</div></div><div class="phase-aux">${alarmHtml}${finalsHtml}</div></div><div class="bottom-bar"><div class="action-row">${canAdvance ? `<button id="next-phase-btn" class="${tv.isExpired ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid ${tv.nextIcon}"></i></button>` : ''}</div></div>`;
 }
 
 function renderFinal(app) {
