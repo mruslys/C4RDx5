@@ -425,23 +425,48 @@ async function decodeGameFromDeflateParam(encodedStr) {
 
 const CacheStore = {
  MY_CACHE: 'c4rdx5-my-games-v2', FAV_CACHE: 'c4rdx5-fav-games-v2', RECENT_CACHE: 'c4rdx5-recent-games-v2',
+ MY_LS_KEY: 'c4rdx5-my-games-backup-v1',
  memMy: new Map(), memFav: new Map(), memRecent: new Map(),
+ _readMyLs() {
+  try {
+   const raw = localStorage.getItem(this.MY_LS_KEY);
+   if (!raw) return [];
+   const arr = JSON.parse(raw);
+   return Array.isArray(arr) ? arr.map(normalizeGameObject) : [];
+  } catch (_) { return []; }
+ },
+ _writeMyLs(map) {
+  try {
+   localStorage.setItem(this.MY_LS_KEY, JSON.stringify(Array.from(map.values()).map(normalizeGameObject)));
+  } catch (_) {}
+ },
  async getAll(cacheName, memFallback) {
+ const byHash = new Map();
+ Array.from(memFallback.values()).forEach(item => { const norm = normalizeGameObject(item); byHash.set(norm.hash, norm); });
+ if (cacheName === this.MY_CACHE) {
+  this._readMyLs().forEach(item => { if (!byHash.has(item.hash)) byHash.set(item.hash, item); });
+ }
  if ('caches' in window) {
  try {
  const cache = await caches.open(cacheName);
  const keys = await cache.keys();
  const rawList = await Promise.all(keys.map(req => cache.match(req).then(r => r ? r.json() : null)));
- const byHash = new Map();
  rawList.filter(Boolean).forEach(item => { const norm = normalizeGameObject(item); byHash.set(norm.hash, norm); });
- return Array.from(byHash.values());
  } catch (_) {}
  }
- return Array.from(memFallback.values()).map(normalizeGameObject);
+ if (cacheName === this.MY_CACHE) {
+  memFallback.clear();
+  byHash.forEach((v, k) => memFallback.set(k, v));
+  this._writeMyLs(memFallback);
+ }
+ return Array.from(byHash.values());
  },
  async put(cacheName, memFallback, gameObj) {
  const clean = normalizeGameObject(gameObj);
  memFallback.set(clean.hash, clean);
+ if (cacheName === this.MY_CACHE) {
+  this._writeMyLs(memFallback);
+ }
  if ('caches' in window) {
  try {
  const cache = await caches.open(cacheName);
@@ -453,6 +478,9 @@ const CacheStore = {
  },
  async remove(cacheName, memFallback, hash) {
  memFallback.delete(hash);
+ if (cacheName === this.MY_CACHE) {
+  this._writeMyLs(memFallback);
+ }
  if ('caches' in window) {
  try {
  const cache = await caches.open(cacheName);
@@ -744,7 +772,8 @@ function triggerMyGamesArchiveUpload() {
 }
 
 async function handleArchiveFileChange(event) {
- const file = event && event.target && event.target.files ? event.target.files[0] : null;
+ const input = event && event.target ? event.target : document.getElementById('archive-upload-input');
+ const file = input && input.files ? input.files[0] : null;
  if (!file) return;
  try {
   const text = await file.text();
@@ -756,6 +785,7 @@ async function handleArchiveFileChange(event) {
    await CacheStore.put(CacheStore.MY_CACHE, CacheStore.memMy, norm);
   }
   await refreshCatalogState();
+  state.catalogTab = 'my';
   state.archiveUploadedOk = true;
   if (state.archiveUploadTimer) clearTimeout(state.archiveUploadTimer);
   state.archiveUploadTimer = setTimeout(() => {
@@ -767,6 +797,8 @@ async function handleArchiveFileChange(event) {
  } catch (err) {
   console.warn('Nepavyko įkelti archyvo:', err);
   Haptics.alarm();
+ } finally {
+  if (input) input.value = '';
  }
 }
 function openLastRecentGame() {
@@ -864,7 +896,7 @@ function startFinalHold(idx, e) {
  const textColorCss = (!finalObj.color || finalObj.color === 'none') ? 'var(--text)' : PALETTE[finalObj.color];
  HoldEngine.startOverlayHold({
  key: `final:${idx}`, btnId: `final-token-${idx}`, colorCss, isDanger: false, noGlow: true,
- innerHtml: `<div class="hold-target playing-card" style="--card-color: ${colorCss}; --card-text-color: ${textColorCss};"><div style="font-size: 4rem; color: ${textColorCss}; margin-bottom: 14px; text-shadow: 0 4px 16px rgba(0,0,0,0.8);"><i class="fa-solid fa-trophy"></i></div><div class="card-face-title">${escapeHtml(finalObj.title)}</div><div class="return-btn-wrap"><button class="lg" style="--accent: ${colorCss}; color: ${textColorCss}; pointer-events: none;"><i class="fa-solid fa-check"></i></button></div></div>`,
+ innerHtml: `<div class="hold-target playing-card" style="--card-color: ${colorCss}; --card-text-color: ${textColorCss};"><div style="font-size: 4rem; color: ${textColorCss}; margin-bottom: 14px; text-shadow: 0 4px 16px rgba(0,0,0,0.8);"><i class="fa-solid fa-trophy"></i></div><div class="card-face-title">${escapeHtml(finalObj.title)}</div><div class="return-btn-wrap" style="opacity: 0; transition: opacity 0.15s ease;"><button class="lg" style="--accent: ${colorCss}; color: ${textColorCss}; pointer-events: none;"><i class="fa-solid fa-check"></i></button></div></div>`,
  onComplete() {
  stopPhaseTimer(); SoundEngine.stopSiren(); clearAppEffects(); state.activeFinal = finalObj; state.screen = 'FINAL';
  setAccent(finalObj.color);
