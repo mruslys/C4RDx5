@@ -193,6 +193,24 @@
  .icon-btn.del:hover, .icon-btn.del:active { opacity: 1; color: var(--c-red); border-color: var(--c-red); background: rgba(239, 68, 68, 0.12); }
  .icon-btn.active-toggle { color: var(--accent); border-color: var(--accent); background: rgba(59, 130, 246, 0.12); }
  .toggle-group { display: flex; gap: 6px; align-items: center; }
+
+ .editor-img-wrap { position: relative; flex: 1; min-width: 0; }
+ .editor-img-preview { width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: border-color 0.2s, transform 0.12s ease; }
+ .editor-img-preview:active { transform: scale(0.985); }
+ .editor-img-preview:hover { border-color: var(--accent); }
+ .editor-img-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+ .editor-img-clear { position: absolute; top: 8px; right: 8px; z-index: 2; opacity: 0.78; background: rgba(9, 10, 15, 0.78); border-color: rgba(255, 255, 255, 0.14); color: var(--text); }
+ .editor-img-clear:hover, .editor-img-clear:active { opacity: 1; color: var(--c-red); border-color: var(--c-red); background: rgba(239, 68, 68, 0.24); }
+
+ #image-picker-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(9, 10, 15, 0.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: none; flex-direction: column; align-items: center; padding: 18px; }
+ #image-picker-overlay.active { display: flex; }
+ .image-picker-scroll { width: 100%; max-width: 540px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; margin-top: 14px; padding-bottom: 24px; }
+ .image-picker-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+ .image-picker-tile { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid var(--border); background: var(--surface); cursor: pointer; transition: transform 0.12s ease, border-color 0.2s, box-shadow 0.2s; }
+ .image-picker-tile:active { transform: scale(0.96); }
+ .image-picker-tile.selected { border-color: var(--accent); box-shadow: 0 0 18px -4px var(--accent); }
+ .image-picker-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+ .image-picker-status { width: 100%; min-height: 220px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 1.8rem; }
 </style>
 </head>
 <body>
@@ -200,6 +218,7 @@
 <div class="lock-bar" id="lock-bar"></div>
 <div id="app"></div>
 <div id="hold-overlay"></div>
+<div id="image-picker-overlay"></div>
 
 <script>
 const APP_DEFAULT_TITLE = 'C4RDx5 — Universalus žaidimų moderatorius';
@@ -339,11 +358,22 @@ function sortCardsByGroups(gameObj) {
 
 const MAX_SHORT_DESC_LEN = 110;
 const MAX_DESC_LEN = 1000;
+function getApiBaseUrl() {
+ const metaBase = document.querySelector('meta[name="api-base-url"]');
+ return metaBase ? metaBase.getAttribute('content').replace(/\/$/, '') : '.';
+}
 function sanitizeShortDescription(desc) {
  return String(desc ?? '').replace(/\s+/g, ' ').trim().slice(0, MAX_SHORT_DESC_LEN);
 }
 function sanitizeDescription(desc) {
  return String(desc ?? '').replace(/\r\n?/g, '\n').trim().slice(0, MAX_DESC_LEN);
+}
+function sanitizeImgId(img) {
+ return String(img ?? '').trim().replace(/^\/?i\//i, '').replace(/\.webp$/i, '').trim();
+}
+function getImageUrl(imgId) {
+ const clean = sanitizeImgId(imgId) || 'default';
+ return `${getApiBaseUrl()}/i/${clean.split('/').map(encodeURIComponent).join('/')}.webp`;
 }
 
 function normalizeGameObject(g) {
@@ -351,6 +381,7 @@ function normalizeGameObject(g) {
  copy.title = copy.title || "Žaidimas";
  copy.short_description = sanitizeShortDescription(copy.short_description);
  copy.description = sanitizeDescription(copy.description);
+ copy.img = sanitizeImgId(copy.img);
  copy.color = COLOR_KEYS.includes(copy.color) ? copy.color : "blue";
  copy.groups = Array.isArray(copy.groups) ? copy.groups.map((grp, i) => ({ id: grp.id || `g_${i + 1}`, title: grp.title ?? "Grupė", color: ITEM_COLOR_KEYS.includes(grp.color) ? grp.color : "none" })) : [];
  const validGroupIds = new Set(copy.groups.map(grp => grp.id));
@@ -367,7 +398,7 @@ function computeCanonicalHash(gameObj) {
  const groups = Array.isArray(gameObj.groups) ? gameObj.groups : [];
  const groupIndexMap = new Map(groups.map((g, idx) => [g.id, idx]));
  const canonical = {
- title: (gameObj.title || "").trim(), short_description: sanitizeShortDescription(gameObj.short_description), description: sanitizeDescription(gameObj.description), color: gameObj.color || "blue",
+ title: (gameObj.title || "").trim(), short_description: sanitizeShortDescription(gameObj.short_description), description: sanitizeDescription(gameObj.description), img: sanitizeImgId(gameObj.img), color: gameObj.color || "blue",
  groups: groups.map(g => ({ title: (g.title || "").trim(), color: g.color || "none" })),
  cards: (gameObj.cards || []).map(c => ({ title: (c.title || "").trim(), groupIdx: groupIndexMap.has(c.groupId) ? groupIndexMap.get(c.groupId) : -1 })),
  phases: (gameObj.phases || []).map(p => ({ title: (p.title || "").trim(), color: p.color || "blue", loop: Boolean(p.loop), duration: Math.max(0, Number(p.duration) || 0), fxAlarm: Boolean(p.fxAlarm), winner: Boolean(p.winner) })),
@@ -391,7 +422,10 @@ function gameToPositionalArray(g) {
  ];
  const desc = sanitizeDescription(g.description);
  const shortDesc = sanitizeShortDescription(g.short_description);
- if (shortDesc) {
+ const img = sanitizeImgId(g.img);
+ if (img) {
+ arr.push(desc, shortDesc, img);
+ } else if (shortDesc) {
  arr.push(desc, shortDesc);
  } else if (desc) {
  arr.push(desc);
@@ -403,7 +437,7 @@ function positionalArrayToGame(arr) {
  if (!Array.isArray(arr) || arr.length < 6) throw new Error("Netinkamas masyvas");
  const groups = Array.isArray(arr[2]) ? arr[2].map((grp, i) => ({ id: `g_${i + 1}`, title: String(grp[0] || "Grupė"), color: ITEM_COLOR_KEYS[grp[1]] || "none" })) : [];
  const game = {
- title: String(arr[0] || "Žaidimas"), short_description: arr.length >= 8 ? sanitizeShortDescription(arr[7]) : "", description: arr.length >= 7 ? sanitizeDescription(arr[6]) : "", color: COLOR_KEYS[arr[1]] || "blue", groups,
+ title: String(arr[0] || "Žaidimas"), short_description: arr.length >= 8 ? sanitizeShortDescription(arr[7]) : "", description: arr.length >= 7 ? sanitizeDescription(arr[6]) : "", img: arr.length >= 9 ? sanitizeImgId(arr[8]) : "", color: COLOR_KEYS[arr[1]] || "blue", groups,
  cards: Array.isArray(arr[3]) ? arr[3].map((c, i) => {
  let rawGrpIdx = -1;
  if (c.length >= 4) rawGrpIdx = c[3]; else if (c.length === 3) rawGrpIdx = c[2]; else if (c.length === 2) rawGrpIdx = c[1];
@@ -663,6 +697,7 @@ const state = {
  baseGame: null,
  customCounts: {},
  editorDraft: null, editingOriginHash: null, editorInitialHash: null,
+ imageCatalog: null, imageCatalogLoading: false, imageCatalogError: false, imagePickerOpen: false,
  deck: [], dealIndex: 0, cardFaceUp: false, currentCard: null,
  archiveUploadedOk: false, archiveUploadTimer: null,
  phaseIndex: 0, firstLap: true, timeLeft: 0, elapsedSec: 0, phasePaused: false, phasePausedElapsedMs: 0, phaseDurationSec: 0, phaseStartTs: 0, timerInterval: null, phaseEndTriggered: false, alarmActive: false,
@@ -671,8 +706,7 @@ const state = {
 
 async function loadPublicCatalog() {
  try {
- const metaBase = document.querySelector('meta[name="api-base-url"]');
- const baseUrl = metaBase ? metaBase.getAttribute('content').replace(/\/$/, '') : '.';
+ const baseUrl = getApiBaseUrl();
  const res = await fetch(`${baseUrl}/games.json`, { cache: 'no-cache' });
  if (res.ok) {
  const data = await res.json();
@@ -690,6 +724,99 @@ async function loadPublicCatalog() {
  }
 }
 function retryLoadPublicCatalog() { Haptics.tap(); loadPublicCatalog(); }
+
+async function loadImageCatalog(force = false) {
+ if (state.imageCatalogLoading) return;
+ if (!force && Array.isArray(state.imageCatalog)) return;
+ state.imageCatalogLoading = true;
+ state.imageCatalogError = false;
+ renderImagePickerModal();
+ try {
+ const res = await fetch(`${getApiBaseUrl()}/images.json`, { cache: 'no-cache' });
+ if (!res.ok) throw new Error(`HTTP ${res.status}`);
+ const data = await res.json();
+ const list = Array.isArray(data) ? data : [];
+ const seen = new Set();
+ state.imageCatalog = list
+  .map(item => sanitizeImgId(typeof item === 'string' ? item : (item && (item.file || item.img || item.id))))
+  .filter(id => { if (!id || seen.has(id)) return false; seen.add(id); return true; });
+ state.imageCatalogError = false;
+ } catch (e) {
+ console.warn('Nepavyko užkrauti paveikslėlių katalogo:', e);
+ state.imageCatalogError = true;
+ } finally {
+ state.imageCatalogLoading = false;
+ renderImagePickerModal();
+ }
+}
+
+function openImagePicker(e) {
+ if (e) e.stopPropagation();
+ if (state.screen !== 'EDITOR' || !state.editorDraft) return;
+ Haptics.tap();
+ state.imagePickerOpen = true;
+ renderImagePickerModal();
+ if (!Array.isArray(state.imageCatalog) || state.imageCatalogError) {
+  loadImageCatalog(true);
+ }
+}
+
+function closeImagePicker(e) {
+ if (e) e.stopPropagation();
+ if (!state.imagePickerOpen) return;
+ state.imagePickerOpen = false;
+ renderImagePickerModal();
+}
+
+function selectGameImageByIndex(idx, e) {
+ if (e) e.stopPropagation();
+ if (!state.editorDraft || !Array.isArray(state.imageCatalog)) return;
+ const chosen = state.imageCatalog[idx];
+ if (!chosen) return;
+ Haptics.tap();
+ state.editorDraft.img = chosen;
+ state.imagePickerOpen = false;
+ renderImagePickerModal();
+ updateDraftHashBadge();
+ render();
+}
+
+function clearGameImageInEditor(e) {
+ if (e) e.stopPropagation();
+ if (!state.editorDraft) return;
+ Haptics.tap();
+ state.editorDraft.img = '';
+ if (state.imagePickerOpen) {
+  state.imagePickerOpen = false;
+  renderImagePickerModal();
+ }
+ updateDraftHashBadge();
+ render();
+}
+
+function renderImagePickerModal() {
+ const overlay = document.getElementById('image-picker-overlay');
+ if (!overlay) return;
+ if (!state.imagePickerOpen || state.screen !== 'EDITOR' || !state.editorDraft) {
+  overlay.classList.remove('active');
+  overlay.innerHTML = '';
+  return;
+ }
+ const currentImg = sanitizeImgId(state.editorDraft.img);
+ let bodyHtml = '';
+ if (state.imageCatalogLoading) {
+  bodyHtml = `<div class="image-picker-status"><i class="fa-solid fa-spinner fa-spin"></i></div>`;
+ } else if (state.imageCatalogError) {
+  bodyHtml = `<div class="image-picker-status"><button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="Haptics.tap(); loadImageCatalog(true)"><i class="fa-solid fa-arrows-rotate"></i></button></div>`;
+ } else if (!state.imageCatalog || state.imageCatalog.length === 0) {
+  bodyHtml = `<div class="image-picker-status"><i class="fa-solid fa-images"></i></div>`;
+ } else {
+  const tiles = state.imageCatalog.map((id, idx) => `<div class="image-picker-tile ${currentImg === id ? 'selected' : ''}" onclick="selectGameImageByIndex(${idx}, event)"><img src="${escapeHtml(getImageUrl(id))}" loading="lazy" alt="${escapeHtml(id)}" /></div>`).join('');
+  bodyHtml = `<div class="image-picker-grid">${tiles}</div>`;
+ }
+ overlay.innerHTML = `<div class="top-bar"><button class="sm" onclick="Haptics.tap(); closeImagePicker(event)"><i class="fa-solid fa-xmark"></i></button><div class="top-actions">${currentImg ? `<button class="sm editor-del-top-btn" onclick="clearGameImageInEditor(event)"><i class="fa-solid fa-trash"></i></button>` : ''}</div></div><div class="image-picker-scroll">${bodyHtml}</div>`;
+ overlay.classList.add('active');
+}
 
 function isPublicCatalogGame(hash) { return PUBLIC_GAMES.some(g => g.hash === hash); }
 
@@ -1006,7 +1133,7 @@ function adjustCustomCount(cardId, delta) {
 }
 
 function openEditorForNew() {
- Haptics.tap(); const emptyGame = normalizeGameObject({ title: "Naujas žaidimas", short_description: "", description: "", color: "blue", groups: [], cards: [], phases: [], finals: [] });
+ Haptics.tap(); const emptyGame = normalizeGameObject({ title: "Naujas žaidimas", short_description: "", description: "", img: "", color: "blue", groups: [], cards: [], phases: [], finals: [] });
  state.editorDraft = emptyGame; state.editingOriginHash = null; state.editorInitialHash = emptyGame.hash; state.screen = 'EDITOR'; setAccent(state.editorDraft.color); render();
 }
 function openEditorByHash(hash, e) {
@@ -1288,7 +1415,7 @@ function renderEditor(app, savedScroll) {
   }).join('');
  const phasesHtml = d.phases.map((p, i) => { const isNone = !p.color || p.color === 'none'; const isWhite = p.color === 'white'; const itemColorCss = getColorCss(p.color, 'var(--border)'); return `<div id="ed-item-phase-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[p.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].color = cycleItemColor('${p.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(p.title)}" placeholder="Fazės pavadinimas" oninput="state.editorDraft.phases[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-phase-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('phase', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div><div class="editor-item-subrow"><div class="toggle-group"><i class="fa-solid fa-stopwatch field-icon"></i><input type="number" min="0" class="num-input" value="${p.duration || ''}" oninput="state.editorDraft.phases[${i}].duration = Math.max(0, parseInt(this.value)||0); updateDraftHashBadge();" /><button class="icon-btn" onpointerdown="event.preventDefault()" onclick="addPhaseDurationInEditor(${i}, 10, event)"><i class="fa-solid fa-plus"></i></button></div><div class="toggle-group"><button class="icon-btn ${p.loop ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].loop = !state.editorDraft.phases[${i}].loop; updateDraftHashBadge(); render();"><i class="fa-solid fa-repeat"></i></button><button class="icon-btn ${p.fxAlarm ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].fxAlarm = !state.editorDraft.phases[${i}].fxAlarm; updateDraftHashBadge(); render();"><i class="fa-solid fa-bullhorn"></i></button><button class="icon-btn ${p.winner ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].winner = !state.editorDraft.phases[${i}].winner; updateDraftHashBadge(); render();"><i class="fa-solid fa-trophy"></i></button></div></div></div>`; }).join('');
  const finalsHtml = d.finals.map((f, i) => { const isNone = !f.color || f.color === 'none'; const isWhite = f.color === 'white'; const itemColorCss = getColorCss(f.color, 'var(--border)'); return `<div id="ed-item-final-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[f.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.finals[${i}].color = cycleItemColor('${f.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(f.title)}" placeholder="Baigties pavadinimas" oninput="state.editorDraft.finals[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-final-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('final', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('');
- app.innerHTML = `<div class="edge-fade-top"></div><div class="top-bar"><div class="top-actions"><button class="sm" onclick="exitEditorToHome()"><i class="fa-solid fa-house"></i></button><button class="sm" onclick="exitEditorToPregame()"><i class="fa-solid fa-play"></i></button></div><div class="top-actions"><button id="editor-del-btn" class="sm editor-del-top-btn hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startEditorDeleteHold(event)"><i class="fa-solid fa-trash"></i></button><button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()"><i class="fa-solid fa-check"></i></button></div></div><div class="screen-scroll editor-scroll"><div class="editor-wrap"><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-window-maximize"></i></span><span class="hash-badge" id="draft-hash-badge">#${d.hash}</span></div><div class="editor-item-main"><div class="color-cycle-btn ${isGameWhite ? 'is-white' : ''}" style="background: ${gameColorCss}" onpointerdown="event.preventDefault()" onclick="cycleGameColorInEditor()"></div><input class="text-input" value="${escapeHtml(d.title)}" placeholder="Žaidimo pavadinimas" oninput="state.editorDraft.title = this.value; updateDraftHashBadge();" /></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-bookmark"></i></div><input class="text-input" maxlength="110" value="${escapeHtml(d.short_description || '')}" oninput="state.editorDraft.short_description = this.value.slice(0, 110); updateDraftHashBadge();" /></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-align-justify"></i></div><textarea class="text-input desc-textarea" rows="3" maxlength="1000" oninput="state.editorDraft.description = this.value.slice(0, 1000); updateDraftHashBadge();">${escapeHtml(d.description || '')}</textarea></div></div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-flag"></i> (${d.groups.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addGroupInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.groups.length > 0 ? `<div class="editor-item-list">${groupsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-masks-theater"></i> (${d.cards.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addCardInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.cards.length > 0 ? `<div class="editor-item-list">${cardsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-play"></i> (${d.phases.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addPhaseInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.phases.length > 0 ? `<div class="editor-item-list">${phasesHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-trophy"></i> (${d.finals.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addFinalInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.finals.length > 0 ? `<div class="editor-item-list">${finalsHtml}</div>` : ''}</div></div></div><div class="bottom-bar"></div>`; const el = app.querySelector('.editor-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
+ app.innerHTML = `<div class="edge-fade-top"></div><div class="top-bar"><div class="top-actions"><button class="sm" onclick="exitEditorToHome()"><i class="fa-solid fa-house"></i></button><button class="sm" onclick="exitEditorToPregame()"><i class="fa-solid fa-play"></i></button></div><div class="top-actions"><button id="editor-del-btn" class="sm editor-del-top-btn hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startEditorDeleteHold(event)"><i class="fa-solid fa-trash"></i></button><button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()"><i class="fa-solid fa-check"></i></button></div></div><div class="screen-scroll editor-scroll"><div class="editor-wrap"><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-window-maximize"></i></span><span class="hash-badge" id="draft-hash-badge">#${d.hash}</span></div><div class="editor-item-main"><div class="color-cycle-btn ${isGameWhite ? 'is-white' : ''}" style="background: ${gameColorCss}" onpointerdown="event.preventDefault()" onclick="cycleGameColorInEditor()"></div><input class="text-input" value="${escapeHtml(d.title)}" placeholder="Žaidimo pavadinimas" oninput="state.editorDraft.title = this.value; updateDraftHashBadge();" /></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-bookmark"></i></div><input class="text-input" maxlength="110" value="${escapeHtml(d.short_description || '')}" oninput="state.editorDraft.short_description = this.value.slice(0, 110); updateDraftHashBadge();" /></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-align-justify"></i></div><textarea class="text-input desc-textarea" rows="3" maxlength="1000" oninput="state.editorDraft.description = this.value.slice(0, 1000); updateDraftHashBadge();">${escapeHtml(d.description || '')}</textarea></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-image"></i></div><div class="editor-img-wrap"><div class="editor-img-preview" onclick="openImagePicker(event)"><img src="${escapeHtml(getImageUrl(d.img))}" alt="" onerror="this.onerror=null; this.src='${escapeHtml(getImageUrl(''))}';" /></div>${d.img ? `<button class="icon-btn editor-img-clear" onclick="clearGameImageInEditor(event)"><i class="fa-solid fa-xmark"></i></button>` : ''}</div></div></div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-flag"></i> (${d.groups.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addGroupInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.groups.length > 0 ? `<div class="editor-item-list">${groupsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-masks-theater"></i> (${d.cards.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addCardInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.cards.length > 0 ? `<div class="editor-item-list">${cardsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-play"></i> (${d.phases.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addPhaseInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.phases.length > 0 ? `<div class="editor-item-list">${phasesHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-trophy"></i> (${d.finals.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addFinalInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.finals.length > 0 ? `<div class="editor-item-list">${finalsHtml}</div>` : ''}</div></div></div><div class="bottom-bar"></div>`; const el = app.querySelector('.editor-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
 }
 
 function renderDeal(app) {
@@ -1325,6 +1452,7 @@ function renderSettings(app) {
 }
 
 function render() {
+ if (state.screen !== 'EDITOR' && state.imagePickerOpen) closeImagePicker();
  const isHome = state.screen === 'HOME';
  document.documentElement.classList.toggle('home-scroll', isHome);
  const app = document.getElementById('app');
@@ -1341,6 +1469,8 @@ function render() {
  else if (state.screen === 'PHASE') renderPhase(app);
  else if (state.screen === 'FINAL') renderFinal(app);
 }
+
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && state.imagePickerOpen) closeImagePicker(); });
 
 handleStartupRouting();
 </script>
