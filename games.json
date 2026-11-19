@@ -157,7 +157,7 @@
         "color": "amber",
         "loop": true,
         "duration": 180,
-        "fxAlarm": true,
+        "fxAlarm": false,
         "winner": true
       },
       {
