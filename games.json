@@ -103,5 +103,84 @@
         "color": "red"
       }
     ]
+  },
+  {
+    "title": "Mafija",
+    "color": "red",
+    "groups": [
+      {
+        "id": "g1",
+        "title": "Miestiečiai",
+        "color": "blue"
+      },
+      {
+        "id": "g2",
+        "title": "Mafija",
+        "color": "red"
+      }
+    ],
+    "cards": [
+      {
+        "id": "c1",
+        "title": "Miestietis",
+        "groupId": "g1"
+      },
+      {
+        "id": "c2",
+        "title": "Komisaras",
+        "groupId": "g1"
+      },
+      {
+        "id": "c3",
+        "title": "Gydytojas",
+        "groupId": "g1"
+      },
+      {
+        "id": "c4",
+        "title": "Mafijozas",
+        "groupId": "g2"
+      }
+    ],
+    "phases": [
+      {
+        "id": "p1",
+        "title": "Pirmoji naktis",
+        "color": "purple",
+        "loop": false,
+        "duration": 30,
+        "fxAlarm": false,
+        "winner": false
+      },
+      {
+        "id": "p2",
+        "title": "Diena",
+        "color": "amber",
+        "loop": true,
+        "duration": 180,
+        "fxAlarm": true,
+        "winner": true
+      },
+      {
+        "id": "p3",
+        "title": "Naktis",
+        "color": "blue",
+        "loop": true,
+        "duration": 45,
+        "fxAlarm": false,
+        "winner": true
+      }
+    ],
+    "finals": [
+      {
+        "id": "f1",
+        "title": "Miestiečių pergalė",
+        "color": "blue"
+      },
+      {
+        "id": "f2",
+        "title": "Mafijos pergalė",
+        "color": "red"
+      }
+    ]
   }
 ]
