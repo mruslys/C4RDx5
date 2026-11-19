@@ -1,0 +1,6 @@
+---
+layout: null
+---
+[{% assign first = true %}{% assign allowed = ".webp" | split: "," %}{% assign sorted_files = site.static_files | sort: "path" %}{% for f in sorted_files %}{% assign prefix = f.path | slice: 0, 3 %}{% assign ext = f.extname | downcase %}{% if prefix == "/i/" and allowed contains ext %}{% unless first %},{% endunless %}{% assign first = false %}
+  {"file": {{ f.path | remove_first: "/i/" | jsonify }}}{% endif %}{% endfor %}
+]
