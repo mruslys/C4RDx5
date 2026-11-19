@@ -74,6 +74,8 @@
  .settings-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; gap: 12px; }
  .settings-row-label { font-size: 1.05rem; font-weight: 700; color: var(--text); display: inline-flex; align-items: center; gap: 10px; }
  .settings-row-actions { display: flex; align-items: center; gap: 10px; }
+ .settings-trigger-btn { opacity: 0.28; border-color: var(--border); box-shadow: none; transition: opacity 0.2s, transform 0.1s, border-color 0.2s, color 0.2s, background 0.2s; }
+ .settings-trigger-btn:hover, .settings-trigger-btn:active { opacity: 1; border-color: var(--border-float); }
  .top-actions { display: flex; gap: 10px; align-items: center; }
  .bottom-bar { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 14px; align-items: center; padding-bottom: 6px; flex-shrink: 0; position: relative; z-index: 130; pointer-events: none; }
  .bottom-bar.floating-bottom { position: fixed; bottom: 18px; left: 0; right: 0; width: 100%; max-width: 540px; margin: 0 auto; padding: 0 18px 6px 18px; }
@@ -506,6 +508,7 @@ const SoundEngine = {
  unlock() {
  if (!isPlayAudioAllowed()) return;
  const ctx = this.ensureContext(); if (!ctx) return;
+ if (ctx.state !== 'running') { try { ctx.resume().catch(() => {}); } catch (_) {} }
  try { const buf = ctx.createBuffer(1, 1, 22050); const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination); src.onended = () => { try { src.disconnect(); } catch (_) {} }; src.start(0); } catch (_) {}
  },
  startKeepAlive() {
@@ -527,9 +530,11 @@ const SoundEngine = {
  this.stopSiren();
  this.stopKeepAlive();
  if (this.ctx) {
-  try { if (this.ctx.state !== 'closed') this.ctx.close().catch(() => {}); } catch (_) {}
-  this.ctx = null;
+  try {
+   if (this.ctx.state === 'running' && typeof this.ctx.suspend === 'function') this.ctx.suspend().catch(() => {});
+  } catch (_) {}
  }
+ if ('audioSession' in navigator) { try { navigator.audioSession.type = 'auto'; } catch (_) {} }
  },
  _playTone(freqStart, freqEnd, duration, type = 'triangle', peakGain = 0.28, delay = 0) {
  if (!isPlayAudioAllowed() || this.muted) return;
@@ -590,7 +595,7 @@ const SoundEngine = {
  playFinalFanfare() { const notes = [261.63, 329.63, 392.00, 523.25]; notes.forEach((freq, idx) => this._playTone(freq, freq, 1.05, 'triangle', 0.28, idx * 0.09)); }
 };
 
-['touchstart', 'touchend', 'pointerdown', 'click'].forEach(evt => window.addEventListener(evt, () => { if (isPlayAudioAllowed()) SoundEngine.ensureContext(); }, { passive: true }));
+['touchstart', 'touchend', 'pointerdown', 'click'].forEach(evt => window.addEventListener(evt, () => { if (isPlayAudioAllowed()) SoundEngine.unlock(); }, { passive: true }));
 
 let PUBLIC_GAMES = [];
 
@@ -1012,6 +1017,7 @@ function startDealing() {
 }
 function handleCardTap() {
  if (state.locked) return;
+ SoundEngine.unlock();
  if (!state.cardFaceUp) {
  state.cardFaceUp = true; state.currentCard = state.deck[state.dealIndex];
  const resolvedColor = resolveCardColorKey(state.baseGame, state.currentCard); setAccent(resolvedColor);
@@ -1169,7 +1175,7 @@ function renderHome(app, savedScroll) {
  else if (tab === 'recent') listContentHtml = state.recentGames.map(g => renderCatalogRowFavOnly(g, false)).join('');
  else if (tab === 'my') listContentHtml = state.myGames.map(g => `<div class="catalog-card" style="--card-accent: ${getColorCss(g.color)}" onclick="openGameByHashFromList('${g.hash}')"><div class="catalog-card-title">${escapeHtml(g.title)}</div><div class="catalog-card-actions"><button class="xs" onclick="openEditorByHash('${g.hash}', event)"><i class="fa-solid fa-pen-to-square"></i></button></div></div>`).join('');
  const homeUrl = escapeHtml(getBaseShareUrl());
- app.innerHTML = `<div class="edge-fade-bottom"></div><div class="top-bar catalog-brand-bar"><div></div><div class="catalog-brand-slot"><a href="${homeUrl}" class="catalog-brand-link"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="C4RDx5" class="catalog-brand-logo" /></a></div><div style="display:flex;justify-content:flex-end;"><button class="sm" onclick="openSettings()"><i class="fa-solid fa-gear"></i></button></div></div><div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel"><div class="catalog-list">${listContentHtml}</div></div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
+ app.innerHTML = `<div class="edge-fade-bottom"></div><div class="top-bar catalog-brand-bar"><div></div><div class="catalog-brand-slot"><a href="${homeUrl}" class="catalog-brand-link"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="C4RDx5" class="catalog-brand-logo" /></a></div><div style="display:flex;justify-content:flex-end;"><button class="sm settings-trigger-btn" onclick="openSettings()"><i class="fa-solid fa-gear"></i></button></div></div><div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel"><div class="catalog-list">${listContentHtml}</div></div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
  if (savedScroll > 0) window.scrollTo(0, savedScroll);
 }
 
@@ -1245,7 +1251,7 @@ function renderFinal(app) {
 }
 
 function renderSettings(app) {
- app.innerHTML = `<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToHome()"><i class="fa-solid fa-house"></i></button><div></div></div><div class="settings-wrap"><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-volume-high"></i></span><div class="settings-row-actions"><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-pen-to-square"></i> (${state.myGames.length})</span><div class="settings-row-actions"><button class="sm" onclick="downloadMyGamesArchive()"><i class="fa-solid fa-download"></i></button><button class="sm ${state.archiveUploadedOk ? 'copied-check' : ''}" onclick="triggerMyGamesArchiveUpload()"><i class="fa-solid ${state.archiveUploadedOk ? 'fa-check' : 'fa-upload'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-red)"></i></span><div class="settings-row-actions"><button id="settings-reset-btn" class="sm danger hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startAppResetHold(event)"><i class="fa-solid fa-skull"></i></button></div></div></div><input id="archive-upload-input" type="file" accept=".json,application/json" style="display:none" onchange="handleArchiveFileChange(event)" /><div class="bottom-bar"></div>`;
+ app.innerHTML = `<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToHome()"><i class="fa-solid fa-house"></i></button><div></div></div><div class="settings-wrap"><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-volume-high"></i></span><div class="settings-row-actions"><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-box-archive"></i></span><div class="settings-row-actions"><button class="sm" onclick="downloadMyGamesArchive()"><i class="fa-solid fa-download"></i></button><button class="sm ${state.archiveUploadedOk ? 'copied-check' : ''}" onclick="triggerMyGamesArchiveUpload()"><i class="fa-solid ${state.archiveUploadedOk ? 'fa-check' : 'fa-upload'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-red)"></i></span><div class="settings-row-actions"><button id="settings-reset-btn" class="sm danger hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startAppResetHold(event)"><i class="fa-solid fa-skull"></i></button></div></div></div><input id="archive-upload-input" type="file" accept=".json,application/json" style="display:none" onchange="handleArchiveFileChange(event)" /><div class="bottom-bar"></div>`;
 }
 
 function render() {
