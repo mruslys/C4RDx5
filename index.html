@@ -37,9 +37,11 @@
 
  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
  input, textarea, select { user-select: text; -webkit-user-select: text; font-family: inherit; }
- body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+ body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; overscroll-behavior-y: none; }
+ html.home-scroll, html.home-scroll body { height: auto; min-height: 100%; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: auto; }
 
  #app { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 18px; transition: box-shadow 0.25s ease; }
+ html.home-scroll #app { height: auto; min-height: 100vh; min-height: 100dvh; justify-content: flex-start; }
  .screen-scroll { position: absolute; inset: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; align-items: center; padding: 78px 18px 0 18px; z-index: 10; }
  .screen-scroll::after { content: ""; display: block; width: 100%; height: 36px; flex-shrink: 0; }
  .screen-scroll.pregame-scroll::after { height: 118px; }
@@ -63,9 +65,11 @@
 
  .top-bar { width: 100%; max-width: 540px; display: flex; justify-content: space-between; align-items: center; min-height: 48px; flex-shrink: 0; position: relative; z-index: 130; pointer-events: none; }
  .top-bar > * { pointer-events: auto; }
- .top-bar.catalog-brand-bar { justify-content: center; min-height: 48px; margin-bottom: 6px; }
- .catalog-brand-logo { width: 96px; height: 96px; display: block; border-radius: 50%; object-fit: contain; cursor: pointer; transition: transform 0.12s ease; }
- .catalog-brand-logo:active { transform: scale(0.95); }
+ .top-bar.catalog-brand-bar { justify-content: center; min-height: 96px; margin-bottom: 6px; }
+ .catalog-brand-link { width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; touch-action: manipulation; -webkit-touch-callout: none; }
+ .catalog-brand-logo { width: 96px; height: 96px; display: block; border-radius: 50%; object-fit: contain; cursor: pointer; transition: transform 0.12s ease; pointer-events: none; }
+ .catalog-brand-link:active .catalog-brand-logo { transform: scale(0.95); }
+ .catalog-reset-btn { width: 96px; height: 96px; font-size: 2.2rem; border-color: var(--c-red); color: var(--c-red); box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.85), 0 0 22px -4px rgba(239, 68, 68, 0.45); }
  .top-actions { display: flex; gap: 10px; align-items: center; }
  .bottom-bar { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 14px; align-items: center; padding-bottom: 6px; flex-shrink: 0; position: relative; z-index: 130; pointer-events: none; }
  .bottom-bar.floating-bottom { position: fixed; bottom: 18px; left: 0; right: 0; width: 100%; max-width: 540px; margin: 0 auto; padding: 0 18px 6px 18px; }
@@ -86,13 +90,13 @@
  .hold-btn.holding { transform: scale(1.14); border-color: var(--hold-color, var(--c-red)); color: var(--hold-color, var(--c-red)); box-shadow: 0 0 22px var(--hold-color, var(--c-red)); }
 
  /* --- Home Catalog --- */
- .catalog-wrap { width: 100%; max-width: 540px; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 2px 2px 0 2px; margin-bottom: -18px; }
+ .catalog-wrap { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 10px; padding: 2px 2px 0 2px; }
  .catalog-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: var(--surface); padding: 6px; border-radius: 16px; border: 1px solid var(--border); flex-shrink: 0; }
  .catalog-tab { width: 100%; height: 44px; border-radius: 11px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; box-shadow: none; transition: background 0.18s, color 0.18s, border-color 0.18s; }
  .catalog-tab:active { transform: scale(0.96); }
  .catalog-tab.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); box-shadow: 0 0 14px -5px var(--accent); }
  .catalog-tab-count { font-size: 0.8rem; opacity: 0.85; }
- .catalog-panel { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: block; }
+ .catalog-panel { width: 100%; display: block; }
  .catalog-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 118px; }
  .catalog-card { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--card-accent, var(--c-blue)); border-radius: 12px; padding: 11px 13px; cursor: pointer; transition: transform 0.16s ease, border-color 0.2s; gap: 10px; max-height: 90px; overflow: hidden; flex-shrink: 0; }
  .catalog-card:active { transform: scale(0.985); }
@@ -128,12 +132,14 @@
  .phase-spacer-top { flex: 1; width: 100%; min-height: 8px; }
  .phase-core { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; }
  .phase-title { font-size: 1.9rem; font-weight: 700; color: var(--accent); max-width: 90%; }
- .timer-display { font-size: clamp(4rem, 17vw, 6.2rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.05; white-space: nowrap; }
+ .timer-display { font-size: clamp(4rem, 17vw, 6.2rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.05; white-space: nowrap; cursor: pointer; }
  .timer-blink { color: var(--c-red); animation: blinkTxt 0.5s infinite alternate; }
  .timer-overdue { color: var(--c-red); }
  @keyframes blinkTxt { from { opacity: 1; } to { opacity: 0.2; } }
 
- .phase-aux { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 10px 0; min-height: 8px; position: relative; z-index: 130; pointer-events: none; }
+ .phase-aux { flex: 1; width: 100%; display: grid; grid-template-rows: 1fr 1fr; align-items: center; justify-items: center; padding: 6px 0; min-height: 8px; position: relative; z-index: 130; pointer-events: none; }
+ .phase-aux-slot { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+ .phase-aux-slot > * { pointer-events: auto; }
  .finals-tray { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; width: 100%; position: relative; z-index: 130; }
  .final-token { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--token-color); color: var(--token-color); font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px -3px var(--token-color); background: #141824; touch-action: none; position: relative; transition: transform 0.15s, box-shadow 0.15s; }
  .final-token.holding { transform: scale(1.16); box-shadow: 0 0 28px var(--token-color); }
@@ -579,7 +585,8 @@ const state = {
  customCounts: {},
  editorDraft: null, editingOriginHash: null, editorInitialHash: null,
  deck: [], dealIndex: 0, cardFaceUp: false, currentCard: null,
- phaseIndex: 0, firstLap: true, timeLeft: 0, elapsedSec: 0, phaseStartTs: 0, timerInterval: null, phaseEndTriggered: false, alarmActive: false,
+ homeResetArmed: false, homeResetRevertTimer: null, homeLogoHoldTimer: null,
+ phaseIndex: 0, firstLap: true, timeLeft: 0, elapsedSec: 0, phasePaused: false, phasePausedElapsedMs: 0, phaseDurationSec: 0, phaseStartTs: 0, timerInterval: null, phaseEndTriggered: false, alarmActive: false,
  activeFinal: null
 };
 
@@ -587,7 +594,7 @@ async function loadPublicCatalog() {
  try {
  const metaBase = document.querySelector('meta[name="api-base-url"]');
  const baseUrl = metaBase ? metaBase.getAttribute('content').replace(/\/$/, '') : '.';
- const res = await fetch(`${baseUrl}/games.json`);
+ const res = await fetch(`${baseUrl}/games.json`, { cache: 'no-cache' });
  if (res.ok) {
  const data = await res.json();
  PUBLIC_GAMES = data.map(normalizeGameObject);
@@ -671,14 +678,48 @@ async function handleStartupRouting() {
 
 window.addEventListener('hashchange', () => { if (window.location.hash.length > 1) handleStartupRouting(); });
 
+function clearHomeLogoTimers() {
+ if (state.homeLogoHoldTimer) { clearTimeout(state.homeLogoHoldTimer); state.homeLogoHoldTimer = null; }
+ if (state.homeResetRevertTimer) { clearTimeout(state.homeResetRevertTimer); state.homeResetRevertTimer = null; }
+}
+function scheduleHomeResetRevert(ms = 4000) {
+ if (state.homeResetRevertTimer) clearTimeout(state.homeResetRevertTimer);
+ state.homeResetRevertTimer = setTimeout(() => {
+  state.homeResetRevertTimer = null;
+  if (state.homeResetArmed && HoldEngine.activeKey !== 'reset:app') {
+   state.homeResetArmed = false;
+   if (state.screen === 'HOME') render();
+  }
+ }, ms);
+}
+function handleHomeLogoPointerDown(e) {
+ if (e && e.button !== undefined && e.button !== 0) return;
+ if (state.homeLogoHoldTimer) clearTimeout(state.homeLogoHoldTimer);
+ state.homeLogoHoldTimer = setTimeout(() => {
+  state.homeLogoHoldTimer = null;
+  state.homeResetArmed = true;
+  Haptics.holdPulse();
+  if (state.screen === 'HOME') render();
+  scheduleHomeResetRevert(4500);
+ }, 750);
+}
+function handleHomeLogoPointerUp() {
+ if (state.homeLogoHoldTimer) { clearTimeout(state.homeLogoHoldTimer); state.homeLogoHoldTimer = null; }
+}
+function handleHomeLogoClick(e) {
+ if (state.homeResetArmed) {
+  if (e) e.preventDefault();
+ }
+}
+
 function selectCatalogTab(tabKey) { Haptics.tap(); state.catalogTab = tabKey; render(); }
 
 function goToHome() {
  HoldEngine.reset(); stopPhaseTimer(); SoundEngine.stopSiren(); SoundEngine.stopKeepAlive();
+ clearHomeLogoTimers(); state.homeResetArmed = false;
  state.alarmActive = false; state.screen = 'HOME'; document.title = APP_DEFAULT_TITLE;
  clearAppEffects(); setAccent('blue'); render();
 }
-function navigateToHomeUrl() { Haptics.tap(); window.location.href = getBaseShareUrl(); }
 function openLastRecentGame() {
  if (!state.recentGames || state.recentGames.length === 0) return;
  Haptics.tap(); const lastGame = state.recentGames[0]; openGameSession(lastGame, { isPublic: isPublicCatalogGame(lastGame.hash) });
@@ -745,8 +786,9 @@ function startEditorDeleteHold(e) {
 }
 
 function startAppResetHold(e) {
+ if (state.homeResetRevertTimer) { clearTimeout(state.homeResetRevertTimer); state.homeResetRevertTimer = null; }
  HoldEngine.startOverlayHold({
-  key: 'reset:app', btnId: 'editor-reset-btn', colorCss: 'var(--c-red)', isDanger: true,
+  key: 'reset:app', btnId: 'home-reset-btn', colorCss: 'var(--c-red)', isDanger: true,
   innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-red)"><i class="fa-solid fa-skull"></i></div>`,
   onComplete() {
    caches.keys().then(keys => keys.forEach(key => caches.delete(key))).catch(()=>{}).finally(() => {
@@ -755,6 +797,7 @@ function startAppResetHold(e) {
    });
   }
  });
+ scheduleHomeResetRevert(4500);
 }
 
 function startCancelHold(e) {
@@ -948,19 +991,34 @@ function loadCurrentPhase() {
  HoldEngine.reset(); stopPhaseTimer(); SoundEngine.stopSiren(); SoundEngine.startKeepAlive(); clearAppEffects(); state.alarmActive = false;
  const hasPhases = state.baseGame.phases && state.baseGame.phases.length > 0;
  if (!hasPhases) {
- setAccent(state.baseGame.color); state.timeLeft = 0; state.elapsedSec = 0; state.phaseStartTs = performance.now(); state.phaseEndTriggered = false;
+ setAccent(state.baseGame.color); state.timeLeft = 0; state.elapsedSec = 0; state.phaseDurationSec = 0; state.phasePaused = false; state.phasePausedElapsedMs = 0; state.phaseStartTs = performance.now(); state.phaseEndTriggered = false;
  startPhaseTimer(0); render(); return;
  }
  const phase = state.baseGame.phases[state.phaseIndex]; setAccent(phase.color);
  triggerPhaseStartEffect(); Haptics.phaseStart(); SoundEngine.playPhaseStart();
  const durationSec = (phase.duration && phase.duration > 0) ? Number(phase.duration) : 0;
- state.timeLeft = durationSec; state.elapsedSec = 0; state.phaseStartTs = performance.now(); state.phaseEndTriggered = false;
+ state.timeLeft = durationSec; state.elapsedSec = 0; state.phaseDurationSec = durationSec; state.phasePaused = false; state.phasePausedElapsedMs = 0; state.phaseStartTs = performance.now(); state.phaseEndTriggered = false;
  startPhaseTimer(durationSec); render();
+}
+function togglePhaseTimerPause() {
+ if (state.screen !== 'PHASE' || state.locked) return;
+ Haptics.tap();
+ if (!state.phasePaused) {
+  state.phasePausedElapsedMs = Math.max(0, performance.now() - state.phaseStartTs);
+  state.phasePaused = true;
+  stopPhaseTimer();
+ } else {
+  state.phaseStartTs = performance.now() - state.phasePausedElapsedMs;
+  state.phasePaused = false;
+  startPhaseTimer(state.phaseDurationSec);
+ }
 }
 function startPhaseTimer(durationSec) {
  stopPhaseTimer();
+ if (state.phasePaused) return;
  const hasLimit = durationSec > 0;
  state.timerInterval = setInterval(() => {
+ if (state.phasePaused) return;
  const elapsedSec = Math.floor(Math.max(0, performance.now() - state.phaseStartTs) / 1000);
  let changed = false;
  if (elapsedSec !== state.elapsedSec) {
@@ -1068,8 +1126,12 @@ function renderHome(app, savedScroll) {
  else if (tab === 'fav') listContentHtml = state.favGames.map(g => renderCatalogRowFavOnly(g, true)).join('');
  else if (tab === 'recent') listContentHtml = state.recentGames.map(g => renderCatalogRowFavOnly(g, false)).join('');
  else if (tab === 'my') listContentHtml = state.myGames.map(g => `<div class="catalog-card" style="--card-accent: ${getColorCss(g.color)}" onclick="openGameByHashFromList('${g.hash}')"><div class="catalog-card-title">${escapeHtml(g.title)}</div><div class="catalog-card-actions"><button class="xs" onclick="openEditorByHash('${g.hash}', event)"><i class="fa-solid fa-pen-to-square"></i></button></div></div>`).join('');
- app.innerHTML = `<div class="edge-fade-bottom"></div><div class="top-bar catalog-brand-bar"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="C4RDx5" class="catalog-brand-logo" onclick="navigateToHomeUrl()" /></div><div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel"><div class="catalog-list">${listContentHtml}</div></div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
- const el = app.querySelector('.catalog-panel'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
+ const homeUrl = escapeHtml(getBaseShareUrl());
+ const brandSlotHtml = state.homeResetArmed
+  ? `<button id="home-reset-btn" class="catalog-reset-btn hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startAppResetHold(event)"><i class="fa-solid fa-skull"></i></button>`
+  : `<a href="${homeUrl}" class="catalog-brand-link" oncontextmenu="return false;" onpointerdown="handleHomeLogoPointerDown(event)" onpointerup="handleHomeLogoPointerUp()" onpointercancel="handleHomeLogoPointerUp()" onpointerleave="handleHomeLogoPointerUp()" onclick="handleHomeLogoClick(event)"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="C4RDx5" class="catalog-brand-logo" draggable="false" /></a>`;
+ app.innerHTML = `<div class="edge-fade-bottom"></div><div class="top-bar catalog-brand-bar">${brandSlotHtml}</div><div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel"><div class="catalog-list">${listContentHtml}</div></div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
+ if (savedScroll > 0) window.scrollTo(0, savedScroll);
 }
 
 function renderPregame(app, savedScroll) {
@@ -1111,7 +1173,7 @@ function renderEditor(app, savedScroll) {
   }).join('');
  const phasesHtml = d.phases.map((p, i) => { const isNone = !p.color || p.color === 'none'; const isWhite = p.color === 'white'; const itemColorCss = getColorCss(p.color, 'var(--border)'); return `<div id="ed-item-phase-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[p.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].color = cycleItemColor('${p.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(p.title)}" placeholder="Fazės pavadinimas" oninput="state.editorDraft.phases[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-phase-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('phase', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div><div class="editor-item-subrow"><div class="toggle-group"><i class="fa-solid fa-stopwatch field-icon"></i><input type="number" min="0" class="num-input" value="${p.duration || ''}" oninput="state.editorDraft.phases[${i}].duration = Math.max(0, parseInt(this.value)||0); updateDraftHashBadge();" /><button class="icon-btn" onpointerdown="event.preventDefault()" onclick="addPhaseDurationInEditor(${i}, 10, event)"><i class="fa-solid fa-plus"></i></button></div><div class="toggle-group"><button class="icon-btn ${p.loop ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].loop = !state.editorDraft.phases[${i}].loop; updateDraftHashBadge(); render();"><i class="fa-solid fa-repeat"></i></button><button class="icon-btn ${p.fxAlarm ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].fxAlarm = !state.editorDraft.phases[${i}].fxAlarm; updateDraftHashBadge(); render();"><i class="fa-solid fa-bullhorn"></i></button><button class="icon-btn ${p.winner ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].winner = !state.editorDraft.phases[${i}].winner; updateDraftHashBadge(); render();"><i class="fa-solid fa-trophy"></i></button></div></div></div>`; }).join('');
  const finalsHtml = d.finals.map((f, i) => { const isNone = !f.color || f.color === 'none'; const isWhite = f.color === 'white'; const itemColorCss = getColorCss(f.color, 'var(--border)'); return `<div id="ed-item-final-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[f.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.finals[${i}].color = cycleItemColor('${f.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(f.title)}" placeholder="Baigties pavadinimas" oninput="state.editorDraft.finals[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-final-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('final', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('');
- app.innerHTML = `<div class="edge-fade-top"></div><div class="top-bar"><div class="top-actions"><button class="sm" onclick="exitEditorToHome()"><i class="fa-solid fa-house"></i></button><button class="sm" onclick="exitEditorToPregame()"><i class="fa-solid fa-play"></i></button></div><div class="top-actions"><button id="editor-reset-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startAppResetHold(event)"><i class="fa-solid fa-skull"></i></button><button id="editor-del-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startEditorDeleteHold(event)"><i class="fa-solid fa-trash"></i></button><button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()"><i class="fa-solid fa-check"></i></button></div></div><div class="screen-scroll editor-scroll"><div class="editor-wrap"><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-palette"></i></span><span class="hash-badge" id="draft-hash-badge">#${d.hash}</span></div><div class="field-row"><input class="text-input" value="${escapeHtml(d.title)}" placeholder="Žaidimo pavadinimas" oninput="state.editorDraft.title = this.value; updateDraftHashBadge();" /></div><div class="field-row"><div class="palette-row">${paletteHtml}</div></div></div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-flag"></i> (${d.groups.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addGroupInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.groups.length > 0 ? `<div class="editor-item-list">${groupsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-masks-theater"></i> (${d.cards.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addCardInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.cards.length > 0 ? `<div class="editor-item-list">${cardsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-play"></i> (${d.phases.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addPhaseInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.phases.length > 0 ? `<div class="editor-item-list">${phasesHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-trophy"></i> (${d.finals.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addFinalInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.finals.length > 0 ? `<div class="editor-item-list">${finalsHtml}</div>` : ''}</div></div></div><div class="bottom-bar"></div>`; const el = app.querySelector('.editor-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
+ app.innerHTML = `<div class="edge-fade-top"></div><div class="top-bar"><div class="top-actions"><button class="sm" onclick="exitEditorToHome()"><i class="fa-solid fa-house"></i></button><button class="sm" onclick="exitEditorToPregame()"><i class="fa-solid fa-play"></i></button></div><div class="top-actions"><button id="editor-del-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startEditorDeleteHold(event)"><i class="fa-solid fa-trash"></i></button><button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()"><i class="fa-solid fa-check"></i></button></div></div><div class="screen-scroll editor-scroll"><div class="editor-wrap"><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-palette"></i></span><span class="hash-badge" id="draft-hash-badge">#${d.hash}</span></div><div class="field-row"><input class="text-input" value="${escapeHtml(d.title)}" placeholder="Žaidimo pavadinimas" oninput="state.editorDraft.title = this.value; updateDraftHashBadge();" /></div><div class="field-row"><div class="palette-row">${paletteHtml}</div></div></div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-flag"></i> (${d.groups.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addGroupInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.groups.length > 0 ? `<div class="editor-item-list">${groupsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-masks-theater"></i> (${d.cards.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addCardInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.cards.length > 0 ? `<div class="editor-item-list">${cardsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-play"></i> (${d.phases.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addPhaseInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.phases.length > 0 ? `<div class="editor-item-list">${phasesHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-trophy"></i> (${d.finals.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addFinalInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.finals.length > 0 ? `<div class="editor-item-list">${finalsHtml}</div>` : ''}</div></div></div><div class="bottom-bar"></div>`; const el = app.querySelector('.editor-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
 }
 
 function renderDeal(app) {
@@ -1135,7 +1197,7 @@ function renderPhase(app) {
  const showFinals = Boolean(currentPhase && currentPhase.winner && state.baseGame.finals && state.baseGame.finals.length > 0);
  const alarmHtml = showAlarm ? `<button class="danger ${state.alarmActive ? 'active-alarm' : ''}" onclick="triggerAlarm()"><i class="fa-solid fa-bullhorn"></i></button>` : '';
  const finalsHtml = showFinals ? `<div class="finals-tray">${state.baseGame.finals.map((f, idx) => `<button id="final-token-${idx}" class="final-token ${HoldEngine.activeKey === 'final:' + idx && HoldEngine.isHolding ? 'holding' : ''}" style="--token-color: ${getColorCss(f.color, 'var(--text)')}" oncontextmenu="return false;" onpointerdown="startFinalHold(${idx}, event)"><i class="fa-solid fa-trophy"></i></button>`).join('')}</div>` : '';
- app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-spacer-top"></div><div class="phase-core"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${tv.isBlinking ? 'timer-blink' : ''} ${tv.isOverdue ? 'timer-overdue' : ''}">${tv.text}</div></div><div class="phase-aux">${alarmHtml}${finalsHtml}</div></div><div class="bottom-bar"><div class="action-row">${canAdvance ? `<button id="next-phase-btn" class="${tv.isExpired ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid ${tv.nextIcon}"></i></button>` : ''}</div></div>`;
+ app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-spacer-top"></div><div class="phase-core"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${tv.isBlinking ? 'timer-blink' : ''} ${tv.isOverdue ? 'timer-overdue' : ''}" onclick="togglePhaseTimerPause()">${tv.text}</div></div><div class="phase-aux"><div class="phase-aux-slot">${alarmHtml}</div><div class="phase-aux-slot">${finalsHtml}</div></div></div><div class="bottom-bar"><div class="action-row">${canAdvance ? `<button id="next-phase-btn" class="${tv.isExpired ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid ${tv.nextIcon}"></i></button>` : ''}</div></div>`;
 }
 
 function renderFinal(app) {
@@ -1144,12 +1206,14 @@ function renderFinal(app) {
 }
 
 function render() {
+ const isHome = state.screen === 'HOME';
+ document.documentElement.classList.toggle('home-scroll', isHome);
  const app = document.getElementById('app');
  const savedEditorScroll = (app.querySelector('.editor-scroll') || {}).scrollTop || 0;
  const savedPregameScroll = (app.querySelector('.pregame-scroll') || {}).scrollTop || 0;
- const savedCatalogScroll = (app.querySelector('.catalog-panel') || {}).scrollTop || 0;
+ const savedCatalogScroll = window.scrollY || document.documentElement.scrollTop || 0;
 
- if (state.screen === 'HOME') renderHome(app, savedCatalogScroll);
+ if (isHome) renderHome(app, savedCatalogScroll);
  else if (state.screen === 'PREGAME') renderPregame(app, savedPregameScroll);
  else if (state.screen === 'EDITOR') renderEditor(app, savedEditorScroll);
  else if (state.screen === 'DEAL') renderDeal(app);
