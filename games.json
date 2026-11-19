@@ -1,6 +1,7 @@
 [
   {
     "title": "Among Us",
+    "description": "Complete tasks, survive sabotage, and vote out hidden Impostors before the crew falls.",
     "color": "blue",
     "groups": [
       {
@@ -106,6 +107,7 @@
   },
   {
     "title": "Mafija",
+    "description": "Dieną miestiečiai demaskuoja mafiją, naktį – slapti šūviai, patikros ir gelbėjimai.",
     "color": "red",
     "groups": [
       {
