@@ -3,6 +3,7 @@
     "title": "Among Us",
     "short_description": "Complete tasks. Expose the Impostors.",
     "description": "Complete tasks, survive sabotage, and vote out hidden Impostors before the crew falls.",
+    "img": "IMG_0057",
     "color": "blue",
     "groups": [
       {
@@ -110,6 +111,7 @@
     "title": "Mafija",
     "short_description": "Miestas miega. Mafija pabunda.",
     "description": "Dieną miestiečiai demaskuoja mafiją, naktį – slapti šūviai, patikros ir gelbėjimai.",
+    "img": "IMG_0058",
     "color": "red",
     "groups": [
       {
