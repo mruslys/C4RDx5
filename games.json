@@ -1,79 +1,89 @@
 [
   {
-    "title": "Amongai",
+    "title": "Among Us",
     "color": "blue",
     "groups": [
       {
         "id": "g1",
-        "title": "Geriečiai",
+        "title": "Crewmates",
         "color": "blue"
       },
       {
         "id": "g2",
-        "title": "Blogiečiai",
+        "title": "Impostors",
         "color": "red"
-      },
-      {
-        "id": "g3",
-        "title": "Speciali rolė",
-        "color": "amber"
       }
     ],
     "cards": [
       {
         "id": "c1",
-        "title": "Žmogus",
+        "title": "Crewmate",
         "groupId": "g1"
       },
       {
         "id": "c2",
-        "title": "Gydytojas",
+        "title": "Scientist",
         "groupId": "g1"
       },
       {
         "id": "c3",
-        "title": "Teisėjas",
+        "title": "Engineer",
         "groupId": "g1"
       },
       {
         "id": "c4",
-        "title": "Policininkas",
+        "title": "Tracker",
         "groupId": "g1"
       },
       {
         "id": "c5",
-        "title": "Imposteris",
-        "groupId": "g2"
+        "title": "Noisemaker",
+        "groupId": "g1"
       },
       {
         "id": "c6",
-        "title": "Trintukas",
-        "groupId": "g2"
+        "title": "Detective",
+        "groupId": "g1"
       },
       {
         "id": "c7",
-        "title": "Ligonis",
-        "groupId": "g2"
+        "title": "Judge",
+        "groupId": "g1"
       },
       {
         "id": "c8",
-        "title": "Džakalas",
-        "groupId": "g3"
+        "title": "Impostor",
+        "groupId": "g2"
+      },
+      {
+        "id": "c9",
+        "title": "Shapeshifter",
+        "groupId": "g2"
+      },
+      {
+        "id": "c10",
+        "title": "Phantom",
+        "groupId": "g2"
+      },
+      {
+        "id": "c11",
+        "title": "Viper",
+        "groupId": "g2"
       }
     ],
     "phases": [
       {
         "id": "p1",
-        "title": "Misija",
+        "title": "Tasks & Sabotage",
         "color": "purple",
         "loop": true,
         "duration": 180,
         "fxAlarm": true,
-        "winner": false
+        "winner": true
       },
       {
         "id": "p2",
-        "title": "Susirinkimas",
+        "title": "Emergency Meeting",
         "color": "blue",
         "loop": true,
         "duration": 60,
@@ -84,152 +94,12 @@
     "finals": [
       {
         "id": "f1",
-        "title": "Žmonių pergalė",
+        "title": "Crewmates Win",
         "color": "blue"
       },
       {
         "id": "f2",
-        "title": "Imposterių pergalė",
-        "color": "red"
-      },
-      {
-        "id": "f3",
-        "title": "Džakalo pergalė",
-        "color": "amber"
-      }
-    ]
-  },
-  {
-    "title": "Mafija",
-    "color": "red",
-    "groups": [
-      {
-        "id": "g1",
-        "title": "Mafija",
-        "color": "red"
-      },
-      {
-        "id": "g2",
-        "title": "Miestiečiai",
-        "color": "blue"
-      }
-    ],
-    "cards": [
-      {
-        "id": "c1",
-        "title": "Mafija",
-        "groupId": "g1"
-      },
-      {
-        "id": "c2",
-        "title": "Donas",
-        "groupId": "g1"
-      },
-      {
-        "id": "c3",
-        "title": "Komisaras",
-        "groupId": "g2"
-      },
-      {
-        "id": "c4",
-        "title": "Gydytojas",
-        "groupId": "g2"
-      },
-      {
-        "id": "c5",
-        "title": "Miestietis",
-        "groupId": "g2"
-      }
-    ],
-    "phases": [
-      {
-        "id": "p1",
-        "title": "Susipažinimo naktis",
-        "color": "purple",
-        "loop": false,
-        "duration": 30,
-        "fxAlarm": false,
-        "winner": false
-      },
-      {
-        "id": "p2",
-        "title": "Diena: Diskusija",
-        "color": "amber",
-        "loop": true,
-        "duration": 180,
-        "fxAlarm": true,
-        "winner": true
-      },
-      {
-        "id": "p3",
-        "title": "Naktis: Medžioklė",
-        "color": "blue",
-        "loop": true,
-        "duration": 45,
-        "fxAlarm": false,
-        "winner": true
-      }
-    ],
-    "finals": [
-      {
-        "id": "f1",
-        "title": "Miesto pergalė",
-        "color": "emerald"
-      },
-      {
-        "id": "f2",
-        "title": "Mafijos pergalė",
-        "color": "red"
-      }
-    ]
-  },
-  {
-    "title": "Šnipas",
-    "color": "emerald",
-    "groups": [
-      {
-        "id": "g1",
-        "title": "Šnipai",
-        "color": "red"
-      },
-      {
-        "id": "g2",
-        "title": "Agentai",
-        "color": "emerald"
-      }
-    ],
-    "cards": [
-      {
-        "id": "c1",
-        "title": "Šnipas",
-        "groupId": "g1"
-      },
-      {
-        "id": "c2",
-        "title": "Agentas",
-        "groupId": "g2"
-      }
-    ],
-    "phases": [
-      {
-        "id": "p1",
-        "title": "Apklausa",
-        "color": "emerald",
-        "loop": false,
-        "duration": 300,
-        "fxAlarm": true,
-        "winner": true
-      }
-    ],
-    "finals": [
-      {
-        "id": "f1",
-        "title": "Agentų pergalė",
-        "color": "emerald"
-      },
-      {
-        "id": "f2",
-        "title": "Šnipo pergalė",
+        "title": "Impostors Win",
         "color": "red"
       }
     ]
