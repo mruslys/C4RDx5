@@ -38,7 +38,7 @@
  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
  input, textarea, select { user-select: text; -webkit-user-select: text; font-family: inherit; }
  body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; overscroll-behavior-y: none; }
- html.home-scroll, html.home-scroll body { height: auto; min-height: 100%; overflow-y: auto; overflow-x: clip; overscroll-behavior-y: auto; }
+ html.home-scroll, html.home-scroll body { height: auto; min-height: 100%; overflow-y: visible; overflow-x: clip; overscroll-behavior-y: auto; }
 
  #app { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom)) 18px; transition: box-shadow 0.25s ease; }
  html.home-scroll #app { height: auto; min-height: 100vh; min-height: 100dvh; justify-content: flex-start; }
@@ -71,7 +71,7 @@
  .catalog-brand-logo { width: 42px; height: 42px; display: block; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.35)); }
  .catalog-brand-name { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.06em; line-height: 1; color: var(--text); display: inline-flex; align-items: baseline; }
  .catalog-brand-name .brand-accent { background: linear-gradient(135deg, var(--c-cyan), var(--c-purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
- .settings-wrap { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+ .settings-wrap { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 12px; margin-top: 2px; margin-bottom: auto; }
  .settings-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; gap: 12px; }
  .settings-row-label { font-size: 1.05rem; font-weight: 700; color: var(--text); display: inline-flex; align-items: center; gap: 10px; }
  .settings-row-actions { display: flex; align-items: center; gap: 10px; }
@@ -86,7 +86,6 @@
  button.sm { width: 42px; height: 42px; font-size: 1.05rem; }
  button.xs { width: 36px; height: 36px; font-size: 0.95rem; border-width: 1px; box-shadow: none; }
  button.lg { width: 78px; height: 78px; font-size: 1.85rem; background: rgba(14, 17, 26, 0.9); border-color: var(--accent); box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.9), 0 0 26px -4px var(--accent); }
- button.is-muted { color: var(--muted); }
  button.danger { border-color: var(--c-red); color: var(--c-red); }
  button.danger.active-alarm { background: var(--c-red); color: #fff; box-shadow: 0 0 25px var(--c-red); }
  button.pulse-btn { border-color: var(--accent); animation: btnPulse 0.7s infinite alternate; }
@@ -103,21 +102,23 @@
  .catalog-tab.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); box-shadow: 0 0 14px -5px var(--accent); }
  .catalog-tab-count { font-size: 0.8rem; opacity: 0.85; }
  .catalog-panel { width: 100%; display: block; }
- .catalog-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 118px; }
+ .catalog-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 118px; }
  .catalog-empty { width: 100%; min-height: calc(100vh - 260px); min-height: calc(100dvh - 260px); display: flex; align-items: center; justify-content: center; padding-bottom: 64px; pointer-events: none; }
  .catalog-empty i { font-size: clamp(5.5rem, 24vw, 7.5rem); color: var(--muted); opacity: 0.08; }
  .catalog-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--card-accent, var(--c-blue)); border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform 0.16s ease, border-color 0.2s; flex-shrink: 0; }
  .catalog-card:active { transform: scale(0.985); }
- .catalog-card-thumb { width: 100%; aspect-ratio: 16 / 9; background: var(--bg); overflow: hidden; border-bottom: 1px solid var(--border); }
- .catalog-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
- .catalog-card-body { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 13px; }
- .catalog-card-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
- .catalog-card-title { font-size: 1.1rem; font-weight: 700; color: var(--text); word-break: break-word; }
- .catalog-card-desc { font-size: 0.82rem; font-weight: 500; color: var(--muted); line-height: 1.3; word-break: break-word; }
- .catalog-card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 3px; }
- .catalog-card-hash { font-size: 0.72rem; padding: 2px 6px; }
- .catalog-meta-stat { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; color: var(--muted); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; }
- .catalog-card-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+ .catalog-card-top { display: flex; align-items: stretch; width: 100%; min-height: 76px; }
+ .catalog-card-thumb { position: relative; flex: 0 0 30%; width: 30%; max-width: 136px; background: var(--bg); overflow: hidden; border-right: 1px solid var(--border); }
+ .catalog-card-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+ .catalog-card-info { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 9px 11px; min-width: 0; flex: 1; }
+ .catalog-card-title { font-size: 1.02rem; font-weight: 700; color: var(--text); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .catalog-card-desc { font-size: 0.78rem; font-weight: 500; color: var(--muted); line-height: 1.3; min-height: calc(1.3em * 2); max-height: calc(1.3em * 2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+ .catalog-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--border); background: rgba(9, 10, 15, 0.28); }
+ .catalog-card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+ .catalog-card-hash { font-size: 0.7rem; padding: 2px 6px; }
+ .catalog-meta-stat { display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; font-weight: 700; color: var(--muted); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; }
+ .catalog-card-actions { display: flex; gap: 7px; align-items: center; flex-shrink: 0; }
+ .catalog-card-actions button.xs { width: 32px; height: 32px; font-size: 0.85rem; }
  .star-active { color: var(--c-amber) !important; border-color: rgba(245, 158, 11, 0.45) !important; }
  .copied-check { color: var(--c-emerald) !important; border-color: rgba(16, 185, 129, 0.55) !important; background: rgba(16, 185, 129, 0.12) !important; }
 
@@ -908,6 +909,10 @@ function selectCatalogTab(tabKey) { Haptics.tap(); state.catalogTab = tabKey; re
 function handleBrandTap(e) {
  if (e) e.preventDefault();
  Haptics.tap();
+ if (state.screen !== 'HOME') {
+  goToHome();
+  return;
+ }
  if (state.catalogTab !== 'pub') {
   state.catalogTab = 'pub';
   render();
@@ -1123,10 +1128,13 @@ function triggerShareConfirmation(hash) {
  state.copiedShareTimer = setTimeout(() => { state.copiedShareHash = null; if (state.screen === 'PREGAME' || state.screen === 'HOME') render(); }, 1300);
 }
 
-async function shareCurrentGame(e) {
- if (e) e.stopPropagation(); const game = state.baseGame; if (!game) return;
- const gameTitle = getGameTitleWithHash(game); document.title = gameTitle;
- const deflated = await encodeGameToDeflateParam(game); const url = `${getBaseShareUrl()}#/${deflated}`;
+async function shareGameObject(game, e, { updateTitle = false } = {}) {
+ if (e) e.stopPropagation();
+ if (!game) return;
+ const gameTitle = getGameTitleWithHash(game);
+ if (updateTitle) document.title = gameTitle;
+ const deflated = await encodeGameToDeflateParam(game);
+ const url = `${getBaseShareUrl()}#/${deflated}`;
  const isWebProtocol = window.location.protocol === 'http:' || window.location.protocol === 'https:';
  const canUseNativeShare = typeof navigator.share === 'function';
  if (canUseNativeShare) {
@@ -1135,7 +1143,19 @@ async function shareCurrentGame(e) {
  if (!navigator.canShare || navigator.canShare(shareData)) { await navigator.share(shareData); triggerShareConfirmation(game.hash); return; }
  } catch (err) { if (err && err.name === 'AbortError') return; }
  }
- await copyTextToClipboard(url); triggerShareConfirmation(game.hash);
+ await copyTextToClipboard(url);
+ triggerShareConfirmation(game.hash);
+}
+
+async function shareCurrentGame(e) {
+ return shareGameObject(state.baseGame, e, { updateTitle: true });
+}
+
+async function shareGameByHash(hash, e) {
+ if (e) e.stopPropagation();
+ const game = findGameAnySourceByHash(hash);
+ if (!game) return;
+ return shareGameObject(game, e, { updateTitle: false });
 }
 
 function getCustomDeckSize() { return (state.baseGame.cards || []).reduce((sum, c) => sum + (state.customCounts[c.id] ?? 0), 0); }
@@ -1394,22 +1414,33 @@ function renderTimerOnly() {
  }
 }
 function openGameByHashFromList(hash, options = {}) { Haptics.tap(); const g = findGameAnySourceByHash(hash); if (g) openGameSession(g, options); }
+
+function renderBrandHeader({ isSettings = false } = {}) {
+ const homeUrl = escapeHtml(getBaseShareUrl());
+ const rightBtn = isSettings
+  ? `<button class="sm" onclick="Haptics.tap(); goToHome()" aria-label="Uždaryti"><i class="fa-solid fa-xmark"></i></button>`
+  : `<button class="sm" onclick="openSettings()" aria-label="Nustatymai"><i class="fa-solid fa-gear"></i></button>`;
+ return `<div class="top-bar catalog-brand-bar"><a href="${homeUrl}" class="catalog-brand-link" onclick="handleBrandTap(event)"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="" class="catalog-brand-logo" /><span class="catalog-brand-name">C4RD<span class="brand-accent">x5</span></span></a><div class="top-actions"><button class="sm" onclick="SoundEngine.toggleMute()" aria-label="Garsas"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button>${rightBtn}</div></div>`;
+}
+
 function renderCatalogCard(g, { mode = 'fav', forceStarActive = false, extraOptions = null } = {}) {
  const clickCall = extraOptions ? `openGameByHashFromList('${g.hash}', ${extraOptions})` : `openGameByHashFromList('${g.hash}')`;
- const descHtml = g.short_description ? `<div class="catalog-card-desc">${escapeHtml(g.short_description)}</div>` : '';
+ const descHtml = `<div class="catalog-card-desc">${escapeHtml(g.short_description || '')}</div>`;
  const groupsCount = Array.isArray(g.groups) ? g.groups.length : 0;
  const cardsCount = Array.isArray(g.cards) ? g.cards.length : 0;
  const fallbackImgUrl = escapeHtml(getImageUrl(''));
  const thumbHtml = `<div class="catalog-card-thumb"><img src="${escapeHtml(getImageUrl(g.img))}" loading="lazy" alt="" onerror="this.onerror=null; this.src='${fallbackImgUrl}';" /></div>`;
  const metaHtml = `<div class="catalog-card-meta"><span class="hash-badge catalog-card-hash">#${escapeHtml(g.hash)}</span><span class="catalog-meta-stat"><i class="fa-solid fa-flag"></i> ${groupsCount}</span><span class="catalog-meta-stat"><i class="fa-solid fa-masks-theater"></i> ${cardsCount}</span></div>`;
- let actionHtml = '';
+ const isCopied = state.copiedShareHash === g.hash;
+ const shareBtnHtml = `<button class="xs ${isCopied ? 'copied-check' : ''}" onclick="shareGameByHash('${g.hash}', event)" aria-label="Dalintis"><i class="fa-solid ${isCopied ? 'fa-check' : 'fa-share-nodes'}"></i></button>`;
+ let primaryActionHtml = '';
  if (mode === 'edit') {
-  actionHtml = `<button class="xs" onclick="openEditorByHash('${g.hash}', event)"><i class="fa-solid fa-pen-to-square"></i></button>`;
+  primaryActionHtml = `<button class="xs" onclick="openEditorByHash('${g.hash}', event)" aria-label="Redaguoti"><i class="fa-solid fa-pen-to-square"></i></button>`;
  } else {
   const faved = forceStarActive || isFavorited(g.hash);
-  actionHtml = `<button class="xs ${faved ? 'star-active' : ''}" onclick="toggleFavoriteGame('${g.hash}', event)"><i class="${faved ? 'fa-solid' : 'fa-regular'} fa-star"></i></button>`;
+  primaryActionHtml = `<button class="xs ${faved ? 'star-active' : ''}" onclick="toggleFavoriteGame('${g.hash}', event)" aria-label="Mėgstami"><i class="${faved ? 'fa-solid' : 'fa-regular'} fa-star"></i></button>`;
  }
- return `<div class="catalog-card" style="--card-accent: ${getColorCss(g.color)}" onclick="${clickCall}">${thumbHtml}<div class="catalog-card-body"><div class="catalog-card-info"><div class="catalog-card-title">${escapeHtml(g.title)}</div>${descHtml}${metaHtml}</div><div class="catalog-card-actions">${actionHtml}</div></div></div>`;
+ return `<div class="catalog-card" style="--card-accent: ${getColorCss(g.color)}" onclick="${clickCall}"><div class="catalog-card-top">${thumbHtml}<div class="catalog-card-info"><div class="catalog-card-title">${escapeHtml(g.title)}</div>${descHtml}</div></div><div class="catalog-card-foot">${metaHtml}<div class="catalog-card-actions">${shareBtnHtml}${primaryActionHtml}</div></div></div>`;
 }
 
 // === RENDER SUBSYSTEM ===
@@ -1421,8 +1452,7 @@ function renderHome(app, savedScroll) {
  else if (tab === 'my') listContentHtml = state.myGames.map(g => renderCatalogCard(g, { mode: 'edit' })).join('');
  const emptyIcon = CATALOG_TAB_ICONS[tab] || 'fa-globe';
  const panelBodyHtml = listContentHtml ? `<div class="catalog-list">${listContentHtml}</div>` : `<div class="catalog-empty" aria-hidden="true"><i class="fa-solid ${emptyIcon}"></i></div>`;
- const homeUrl = escapeHtml(getBaseShareUrl());
- app.innerHTML = `<div class="edge-fade-top"></div><div class="edge-fade-bottom"></div><div class="top-bar catalog-brand-bar"><a href="${homeUrl}" class="catalog-brand-link" onclick="handleBrandTap(event)"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="" class="catalog-brand-logo" /><span class="catalog-brand-name">C4RD<span class="brand-accent">x5</span></span></a><div class="top-actions"><button class="sm ${SoundEngine.muted ? 'is-muted' : ''}" onclick="SoundEngine.toggleMute()" aria-label="Garsas"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button><button class="sm" onclick="openSettings()" aria-label="Nustatymai"><i class="fa-solid fa-gear"></i></button></div></div><div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel">${panelBodyHtml}</div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
+ app.innerHTML = `<div class="edge-fade-top"></div><div class="edge-fade-bottom"></div>${renderBrandHeader({ isSettings: false })}<div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel">${panelBodyHtml}</div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
  if (savedScroll > 0) window.scrollTo(0, savedScroll);
 }
 
@@ -1499,7 +1529,7 @@ function renderFinal(app) {
 }
 
 function renderSettings(app) {
- app.innerHTML = `<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToHome()"><i class="fa-solid fa-house"></i></button><div></div></div><div class="settings-wrap"><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-volume-high"></i></span><div class="settings-row-actions"><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-box-archive"></i></span><div class="settings-row-actions"><button class="sm" onclick="downloadMyGamesArchive()"><i class="fa-solid fa-download"></i></button><button class="sm ${state.archiveUploadedOk ? 'copied-check' : ''}" onclick="triggerMyGamesArchiveUpload()"><i class="fa-solid ${state.archiveUploadedOk ? 'fa-check' : 'fa-upload'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-red)"></i></span><div class="settings-row-actions"><button id="settings-reset-btn" class="sm danger hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startAppResetHold(event)"><i class="fa-solid fa-skull"></i></button></div></div></div><input id="archive-upload-input" type="file" accept=".json,application/json" style="display:none" onchange="handleArchiveFileChange(event)" /><div class="bottom-bar"></div>`;
+ app.innerHTML = `${renderBrandHeader({ isSettings: true })}<div class="settings-wrap"><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-volume-high"></i></span><div class="settings-row-actions"><button class="sm" onclick="SoundEngine.toggleMute()"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-box-archive"></i></span><div class="settings-row-actions"><button class="sm" onclick="downloadMyGamesArchive()"><i class="fa-solid fa-download"></i></button><button class="sm ${state.archiveUploadedOk ? 'copied-check' : ''}" onclick="triggerMyGamesArchiveUpload()"><i class="fa-solid ${state.archiveUploadedOk ? 'fa-check' : 'fa-upload'}"></i></button></div></div><div class="settings-row"><span class="settings-row-label"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-red)"></i></span><div class="settings-row-actions"><button id="settings-reset-btn" class="sm danger hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startAppResetHold(event)"><i class="fa-solid fa-skull"></i></button></div></div></div><input id="archive-upload-input" type="file" accept=".json,application/json" style="display:none" onchange="handleArchiveFileChange(event)" /><div class="bottom-bar"></div>`;
 }
 
 function render() {
