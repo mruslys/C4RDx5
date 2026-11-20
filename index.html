@@ -2,7 +2,7 @@
 <html lang="lt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>C4RDx5 — Universalus žaidimų moderatorius</title>
 <link rel="icon" type="image/png" href="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="https://mruslys.github.io/C4RDx5/f/favicon.svg" />
@@ -38,16 +38,16 @@
  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
  input, textarea, select { user-select: text; -webkit-user-select: text; font-family: inherit; }
  body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; overscroll-behavior-y: none; }
- html.home-scroll, html.home-scroll body { height: auto; min-height: 100%; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: auto; }
+ html.home-scroll, html.home-scroll body { height: auto; min-height: 100%; overflow-y: auto; overflow-x: clip; overscroll-behavior-y: auto; }
 
- #app { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 18px; transition: box-shadow 0.25s ease; }
+ #app { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom)) 18px; transition: box-shadow 0.25s ease; }
  html.home-scroll #app { height: auto; min-height: 100vh; min-height: 100dvh; justify-content: flex-start; }
- .screen-scroll { position: absolute; inset: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; align-items: center; padding: 78px 18px 0 18px; z-index: 10; }
+ .screen-scroll { position: absolute; inset: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; align-items: center; padding: calc(78px + env(safe-area-inset-top)) 18px 0 18px; z-index: 10; }
  .screen-scroll::after { content: ""; display: block; width: 100%; height: 36px; flex-shrink: 0; }
  .screen-scroll.pregame-scroll::after { height: 118px; }
 
  .edge-fade-top, .edge-fade-bottom { position: fixed; left: 0; right: 0; pointer-events: none; z-index: 90; }
- .edge-fade-top { top: 0; height: 76px; background: linear-gradient(to bottom, rgba(9, 10, 15, 0.92) 0%, rgba(9, 10, 15, 0.55) 55%, rgba(9, 10, 15, 0) 100%); }
+ .edge-fade-top { top: 0; height: calc(76px + env(safe-area-inset-top)); background: linear-gradient(to bottom, rgba(9, 10, 15, 0.92) 0%, rgba(9, 10, 15, 0.55) 55%, rgba(9, 10, 15, 0) 100%); }
  .edge-fade-bottom { bottom: 0; height: 112px; background: linear-gradient(to top, rgba(9, 10, 15, 0.94) 0%, rgba(9, 10, 15, 0.6) 55%, rgba(9, 10, 15, 0) 100%); }
 
  .fx-start { animation: flashEdge 0.9s ease-out; }
@@ -65,19 +65,19 @@
 
  .top-bar { width: 100%; max-width: 540px; display: flex; justify-content: space-between; align-items: center; min-height: 48px; flex-shrink: 0; position: relative; z-index: 130; pointer-events: none; }
  .top-bar > * { pointer-events: auto; }
- .top-bar.catalog-brand-bar { display: grid; grid-template-columns: 42px 1fr 42px; align-items: start; min-height: 96px; margin-bottom: 6px; }
- .catalog-bar-side { height: 48px; display: flex; align-items: center; justify-content: flex-start; }
- .catalog-brand-slot { display: flex; justify-content: center; align-items: center; }
- .catalog-brand-link { width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; touch-action: manipulation; }
- .catalog-brand-logo { width: 96px; height: 96px; display: block; border-radius: 50%; object-fit: contain; cursor: pointer; transition: transform 0.12s ease; }
- .catalog-brand-link:active .catalog-brand-logo { transform: scale(0.95); }
+ .top-bar.catalog-brand-bar { display: flex; justify-content: space-between; align-items: center; min-height: 52px; margin-bottom: 12px; padding: 2px; }
+ .catalog-brand-link { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; color: var(--text); touch-action: manipulation; padding: 4px 8px 4px 2px; border-radius: 14px; transition: transform 0.12s ease; }
+ .catalog-brand-link:active { transform: scale(0.96); }
+ .catalog-brand-logo { width: 42px; height: 42px; display: block; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.35)); }
+ .catalog-brand-name { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.06em; line-height: 1; color: var(--text); display: inline-flex; align-items: baseline; }
+ .catalog-brand-name .brand-accent { background: linear-gradient(135deg, var(--c-cyan), var(--c-purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
  .settings-wrap { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
  .settings-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; gap: 12px; }
  .settings-row-label { font-size: 1.05rem; font-weight: 700; color: var(--text); display: inline-flex; align-items: center; gap: 10px; }
  .settings-row-actions { display: flex; align-items: center; gap: 10px; }
  .top-actions { display: flex; gap: 10px; align-items: center; }
  .bottom-bar { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 14px; align-items: center; padding-bottom: 6px; flex-shrink: 0; position: relative; z-index: 130; pointer-events: none; }
- .bottom-bar.floating-bottom { position: fixed; bottom: 18px; left: 0; right: 0; width: 100%; max-width: 540px; margin: 0 auto; padding: 0 18px 6px 18px; }
+ .bottom-bar.floating-bottom { position: fixed; bottom: calc(18px + env(safe-area-inset-bottom)); left: 0; right: 0; width: 100%; max-width: 540px; margin: 0 auto; padding: 0 18px 6px 18px; }
  .action-row { display: flex; gap: 20px; justify-content: center; align-items: center; width: 100%; pointer-events: none; }
  .action-row > *, .finals-tray, .phase-aux > * { pointer-events: auto; }
 
@@ -86,6 +86,7 @@
  button.sm { width: 42px; height: 42px; font-size: 1.05rem; }
  button.xs { width: 36px; height: 36px; font-size: 0.95rem; border-width: 1px; box-shadow: none; }
  button.lg { width: 78px; height: 78px; font-size: 1.85rem; background: rgba(14, 17, 26, 0.9); border-color: var(--accent); box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.9), 0 0 26px -4px var(--accent); }
+ button.is-muted { color: var(--muted); }
  button.danger { border-color: var(--c-red); color: var(--c-red); }
  button.danger.active-alarm { background: var(--c-red); color: #fff; box-shadow: 0 0 25px var(--c-red); }
  button.pulse-btn { border-color: var(--accent); animation: btnPulse 0.7s infinite alternate; }
@@ -96,13 +97,15 @@
 
  /* --- Home Catalog --- */
  .catalog-wrap { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 10px; padding: 2px 2px 0 2px; }
- .catalog-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: var(--surface); padding: 6px; border-radius: 16px; border: 1px solid var(--border); flex-shrink: 0; }
+ .catalog-tabs { position: sticky; top: calc(10px + env(safe-area-inset-top)); z-index: 120; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: rgba(18, 21, 31, 0.84); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 6px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 8px 22px -6px rgba(0, 0, 0, 0.72); flex-shrink: 0; }
  .catalog-tab { width: 100%; height: 44px; border-radius: 11px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; box-shadow: none; transition: background 0.18s, color 0.18s, border-color 0.18s; }
  .catalog-tab:active { transform: scale(0.96); }
  .catalog-tab.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); box-shadow: 0 0 14px -5px var(--accent); }
  .catalog-tab-count { font-size: 0.8rem; opacity: 0.85; }
  .catalog-panel { width: 100%; display: block; }
  .catalog-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 118px; }
+ .catalog-empty { width: 100%; min-height: calc(100vh - 260px); min-height: calc(100dvh - 260px); display: flex; align-items: center; justify-content: center; padding-bottom: 64px; pointer-events: none; }
+ .catalog-empty i { font-size: clamp(5.5rem, 24vw, 7.5rem); color: var(--muted); opacity: 0.08; }
  .catalog-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--card-accent, var(--c-blue)); border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform 0.16s ease, border-color 0.2s; flex-shrink: 0; }
  .catalog-card:active { transform: scale(0.985); }
  .catalog-card-thumb { width: 100%; aspect-ratio: 16 / 9; background: var(--bg); overflow: hidden; border-bottom: 1px solid var(--border); }
@@ -235,6 +238,12 @@ const APP_DEFAULT_TITLE = 'C4RDx5 — Universalus žaidimų moderatorius';
 const MAX_RECENT_GAMES = 5;
 const SESSION_TTL_MS = 6 * 60 * 60 * 1000;
 const ZERO_BLINK_SEC = 3;
+const CATALOG_TAB_ICONS = {
+ pub: 'fa-globe',
+ fav: 'fa-star',
+ recent: 'fa-clock-rotate-left',
+ my: 'fa-pen-to-square'
+};
 
 function getGameTitleWithHash(gameObj) {
  if (!gameObj) return APP_DEFAULT_TITLE;
@@ -310,11 +319,11 @@ const HoldEngine = {
  isDanger,
  onSetup() {
  const overlay = document.getElementById('hold-overlay');
- if (overlay) { 
-   overlay.innerHTML = innerHtml; 
-   if (!noGlow) { overlay.style.boxShadow = `inset 0 0 90px ${colorCss}, inset 0 0 30px ${colorCss}`; } 
+ if (overlay) {
+   overlay.innerHTML = innerHtml;
+   if (!noGlow) { overlay.style.boxShadow = `inset 0 0 90px ${colorCss}, inset 0 0 30px ${colorCss}`; }
    else { overlay.style.boxShadow = 'none'; }
-   overlay.classList.add('active'); 
+   overlay.classList.add('active');
  }
  const btn = btnId ? document.getElementById(btnId) : null; if (btn) btn.classList.add('holding');
  },
@@ -896,6 +905,17 @@ window.addEventListener('hashchange', () => { if (window.location.hash.length > 
 
 function selectCatalogTab(tabKey) { Haptics.tap(); state.catalogTab = tabKey; render(); }
 
+function handleBrandTap(e) {
+ if (e) e.preventDefault();
+ Haptics.tap();
+ if (state.catalogTab !== 'pub') {
+  state.catalogTab = 'pub';
+  render();
+ }
+ window.scrollTo({ top: 0, behavior: 'smooth' });
+ loadPublicCatalog();
+}
+
 function openSettings() {
  HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
  state.alarmActive = false; state.screen = 'SETTINGS'; document.title = APP_DEFAULT_TITLE;
@@ -1399,8 +1419,10 @@ function renderHome(app, savedScroll) {
  else if (tab === 'fav') listContentHtml = state.favGames.map(g => renderCatalogCard(g, { mode: 'fav', forceStarActive: true })).join('');
  else if (tab === 'recent') listContentHtml = state.recentGames.map(g => renderCatalogCard(g, { mode: 'fav' })).join('');
  else if (tab === 'my') listContentHtml = state.myGames.map(g => renderCatalogCard(g, { mode: 'edit' })).join('');
+ const emptyIcon = CATALOG_TAB_ICONS[tab] || 'fa-globe';
+ const panelBodyHtml = listContentHtml ? `<div class="catalog-list">${listContentHtml}</div>` : `<div class="catalog-empty" aria-hidden="true"><i class="fa-solid ${emptyIcon}"></i></div>`;
  const homeUrl = escapeHtml(getBaseShareUrl());
- app.innerHTML = `<div class="edge-fade-bottom"></div><div class="top-bar catalog-brand-bar"><div class="catalog-bar-side"><button class="sm" onclick="openSettings()"><i class="fa-solid fa-gear"></i></button></div><div class="catalog-brand-slot"><a href="${homeUrl}" class="catalog-brand-link"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="C4RDx5" class="catalog-brand-logo" /></a></div><div></div></div><div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel"><div class="catalog-list">${listContentHtml}</div></div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
+ app.innerHTML = `<div class="edge-fade-top"></div><div class="edge-fade-bottom"></div><div class="top-bar catalog-brand-bar"><a href="${homeUrl}" class="catalog-brand-link" onclick="handleBrandTap(event)"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="" class="catalog-brand-logo" /><span class="catalog-brand-name">C4RD<span class="brand-accent">x5</span></span></a><div class="top-actions"><button class="sm ${SoundEngine.muted ? 'is-muted' : ''}" onclick="SoundEngine.toggleMute()" aria-label="Garsas"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button><button class="sm" onclick="openSettings()" aria-label="Nustatymai"><i class="fa-solid fa-gear"></i></button></div></div><div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel">${panelBodyHtml}</div></div><div class="bottom-bar floating-bottom"><div class="action-row"><button class="lg" ${!hasRecent ? 'disabled style="opacity: 0.35; pointer-events: none; border-color: var(--border); box-shadow: none;"' : ''} onclick="openLastRecentGame()"><i class="fa-solid fa-clock-rotate-left"></i></button>${state.publicCatalogError ? `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>` : `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`}<button class="lg" onclick="openEditorForNew()"><i class="fa-solid fa-plus"></i></button></div></div>`;
  if (savedScroll > 0) window.scrollTo(0, savedScroll);
 }
 
@@ -1425,14 +1447,14 @@ function renderEditor(app, savedScroll) {
  const hasCustomImg = Boolean(sanitizeImgId(d.img));
  const imgPanelHtml = `<div class="editor-img-wrap"><div class="editor-img-preview ${hasCustomImg ? '' : 'is-empty'}" onclick="openImagePicker(event)">${hasCustomImg ? `<img src="${escapeHtml(getImageUrl(d.img))}" alt="" onerror="this.onerror=null; this.src='${escapeHtml(getImageUrl(''))}';" />` : `<i class="fa-solid fa-image"></i>`}</div>${hasCustomImg ? `<button class="icon-btn editor-img-clear" onclick="clearGameImageInEditor(event)"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>`;
  const groupsHtml = d.groups.map((grp, i) => { const isNone = !grp.color || grp.color === 'none'; const isWhite = grp.color === 'white'; const itemColorCss = getColorCss(grp.color, 'var(--border)'); return `<div id="ed-item-group-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[grp.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.groups[${i}].color = cycleItemColor('${grp.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(grp.title)}" placeholder="Grupės pavadinimas" oninput="state.editorDraft.groups[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-group-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('group', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('');
- const cardsHtml = d.cards.map((c, i) => { 
-      const grp = getGroupById(d, c.groupId); 
-      const resolvedColorKey = resolveCardColorKey(d, c); 
-      const isNone = resolvedColorKey === 'none'; 
-      const isWhite = resolvedColorKey === 'white'; 
-      const itemColorCss = getColorCss(resolvedColorKey, 'var(--border)'); 
+ const cardsHtml = d.cards.map((c, i) => {
+      const grp = getGroupById(d, c.groupId);
+      const resolvedColorKey = resolveCardColorKey(d, c);
+      const isNone = resolvedColorKey === 'none';
+      const isWhite = resolvedColorKey === 'white';
+      const itemColorCss = getColorCss(resolvedColorKey, 'var(--border)');
       const groupTextColor = isNone ? 'var(--muted)' : PALETTE[resolvedColorKey];
- 
+
       return `<div id="ed-item-card-${i}" class="editor-item" style="--item-color: ${itemColorCss}">
           <div class="editor-item-main">
               <div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" title="${grp ? escapeHtml(grp.title) : 'Be grupės'}" style="background: ${isNone ? 'transparent' : PALETTE[resolvedColorKey]}" onpointerdown="event.preventDefault()" onclick="cycleCardGroupInEditor(${i})"><i class="fa-solid fa-flag"></i></div>
@@ -1440,7 +1462,7 @@ function renderEditor(app, savedScroll) {
               <button id="ed-del-card-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('card', ${i}, event)"><i class="fa-solid fa-trash"></i></button>
           </div>
           <span class="editor-card-group-label" style="color: ${groupTextColor};">${grp ? escapeHtml(grp.title) : 'Be grupės'}</span>
-      </div>`; 
+      </div>`;
   }).join('');
  const phasesHtml = d.phases.map((p, i) => { const isNone = !p.color || p.color === 'none'; const isWhite = p.color === 'white'; const itemColorCss = getColorCss(p.color, 'var(--border)'); return `<div id="ed-item-phase-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[p.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].color = cycleItemColor('${p.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(p.title)}" placeholder="Fazės pavadinimas" oninput="state.editorDraft.phases[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-phase-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('phase', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div><div class="editor-item-subrow"><div class="toggle-group"><i class="fa-solid fa-stopwatch field-icon"></i><input type="number" min="0" class="num-input" value="${p.duration || ''}" oninput="state.editorDraft.phases[${i}].duration = Math.max(0, parseInt(this.value)||0); updateDraftHashBadge();" /><button class="icon-btn" onpointerdown="event.preventDefault()" onclick="addPhaseDurationInEditor(${i}, 10, event)"><i class="fa-solid fa-plus"></i></button></div><div class="toggle-group"><button class="icon-btn ${p.loop ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].loop = !state.editorDraft.phases[${i}].loop; updateDraftHashBadge(); render();"><i class="fa-solid fa-repeat"></i></button><button class="icon-btn ${p.fxAlarm ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].fxAlarm = !state.editorDraft.phases[${i}].fxAlarm; updateDraftHashBadge(); render();"><i class="fa-solid fa-bullhorn"></i></button><button class="icon-btn ${p.winner ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].winner = !state.editorDraft.phases[${i}].winner; updateDraftHashBadge(); render();"><i class="fa-solid fa-trophy"></i></button></div></div></div>`; }).join('');
  const finalsHtml = d.finals.map((f, i) => { const isNone = !f.color || f.color === 'none'; const isWhite = f.color === 'white'; const itemColorCss = getColorCss(f.color, 'var(--border)'); return `<div id="ed-item-final-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[f.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.finals[${i}].color = cycleItemColor('${f.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(f.title)}" placeholder="Baigties pavadinimas" oninput="state.editorDraft.finals[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-final-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('final', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('');
