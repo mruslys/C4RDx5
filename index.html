@@ -852,17 +852,20 @@ async function purgeNonPublicGameFromOtherCaches(hash) {
 async function refreshCatalogState() {
  state.myGames = await CacheStore.getAll(CacheStore.MY_CACHE, CacheStore.memMy);
  state.favGames = await CacheStore.getAll(CacheStore.FAV_CACHE, CacheStore.memFav);
+ const myHashes = new Set(state.myGames.map(g => g.hash));
  const recentRaw = await CacheStore.getAll(CacheStore.RECENT_CACHE, CacheStore.memRecent);
  recentRaw.sort((a, b) => (b._recentTs || 0) - (a._recentTs || 0));
+ const recentFiltered = recentRaw.filter(g => !myHashes.has(g.hash));
  if (recentRaw.length > MAX_RECENT_GAMES) {
  const overflow = recentRaw.slice(MAX_RECENT_GAMES);
  for (const oldGame of overflow) await CacheStore.remove(CacheStore.RECENT_CACHE, CacheStore.memRecent, oldGame.hash);
  }
- state.recentGames = recentRaw.slice(0, MAX_RECENT_GAMES);
+ state.recentGames = recentFiltered.slice(0, MAX_RECENT_GAMES);
 }
 
 async function recordRecentGame(gameObj) {
  const copy = normalizeGameObject(gameObj);
+ if (isInMyGames(copy.hash)) return;
  copy._recentTs = Date.now();
  await CacheStore.put(CacheStore.RECENT_CACHE, CacheStore.memRecent, copy);
  const allRecent = await CacheStore.getAll(CacheStore.RECENT_CACHE, CacheStore.memRecent);
@@ -1014,7 +1017,9 @@ function openRandomGameForTab(tab) {
 async function openGameSession(gameObj, options = {}) {
  state.baseGame = normalizeGameObject(gameObj);
  state.currentGameIsPublic = (typeof options.isPublic === 'boolean') ? options.isPublic : isPublicCatalogGame(state.baseGame.hash);
- await recordRecentGame(state.baseGame);
+ if (!options.skipRecent && !isInMyGames(state.baseGame.hash)) {
+  await recordRecentGame(state.baseGame);
+ }
  const restored = SessionStore.loadForGame(state.baseGame);
  state.customCounts = restored.customCounts;
  goToPregame();
@@ -1064,6 +1069,14 @@ function startEditorDeleteHold(e) {
  if (draftHash && draftHash !== originHash) { await CacheStore.remove(CacheStore.MY_CACHE, CacheStore.memMy, draftHash); await purgeNonPublicGameFromOtherCaches(draftHash); }
  await refreshCatalogState(); state.catalogTab = 'my'; goToHome();
  }
+ });
+}
+
+function startEditorPublishHold(e) {
+ HoldEngine.startOverlayHold({
+ key: 'publish:editor', btnId: 'editor-pub-btn', colorCss: 'var(--c-blue)', isDanger: false,
+ innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-blue)"><i class="fa-solid fa-cloud-arrow-up"></i></div>`,
+ onComplete() {}
  });
 }
 
@@ -1228,8 +1241,8 @@ function addFinalInEditor(e) { if (e) e.stopPropagation(); if (!state.editorDraf
 function exitEditorToHome() { Haptics.tap(); goToHome(); }
 async function exitEditorToPregame() {
  Haptics.tap();
- if (state.editingOriginHash) { const originGame = findGameAnySourceByHash(state.editingOriginHash); if (originGame) { await openGameSession(originGame, { isPublic: isPublicCatalogGame(originGame.hash) }); return; } goToPregame(); }
- else if (state.editorDraft) await openGameSession(state.editorDraft, { isPublic: isPublicCatalogGame(state.editorDraft.hash) });
+ if (state.editingOriginHash) { const originGame = findGameAnySourceByHash(state.editingOriginHash); if (originGame) { await openGameSession(originGame, { isPublic: isPublicCatalogGame(originGame.hash), skipRecent: true }); return; } goToPregame(); }
+ else if (state.editorDraft) await openGameSession(state.editorDraft, { isPublic: isPublicCatalogGame(state.editorDraft.hash), skipRecent: true });
  else goToPregame();
 }
 function setGameColorInEditor(colorKey) {
@@ -1470,7 +1483,7 @@ function renderHome(app, savedScroll) {
    ? `<button class="lg" onclick="openRandomGameForTab('recent')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
    : '';
  } else if (tab === 'my') {
-  listContentHtml = state.myGames.map(g => renderCatalogCard(g, { mode: 'edit' })).join('');
+  listContentHtml = state.myGames.map(g => renderCatalogCard(g, { mode: 'edit', extraOptions: '{ skipRecent: true }' })).join('');
   bottomActionHtml = `<button class="lg" style="--accent: var(--c-emerald); color: var(--c-emerald);" onclick="openEditorForNew()" aria-label="Naujas žaidimas"><i class="fa-solid fa-plus"></i></button>`;
  }
  const emptyIcon = CATALOG_TAB_ICONS[tab] || 'fa-globe';
@@ -1518,7 +1531,7 @@ function renderEditor(app, savedScroll) {
   }).join('');
  const phasesHtml = d.phases.map((p, i) => { const isNone = !p.color || p.color === 'none'; const isWhite = p.color === 'white'; const itemColorCss = getColorCss(p.color, 'var(--border)'); return `<div id="ed-item-phase-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[p.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].color = cycleItemColor('${p.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(p.title)}" placeholder="Fazės pavadinimas" oninput="state.editorDraft.phases[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-phase-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('phase', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div><div class="editor-item-subrow"><div class="toggle-group"><i class="fa-solid fa-stopwatch field-icon"></i><input type="number" min="0" class="num-input" value="${p.duration || ''}" oninput="state.editorDraft.phases[${i}].duration = Math.max(0, parseInt(this.value)||0); updateDraftHashBadge();" /><button class="icon-btn" onpointerdown="event.preventDefault()" onclick="addPhaseDurationInEditor(${i}, 10, event)"><i class="fa-solid fa-plus"></i></button></div><div class="toggle-group"><button class="icon-btn ${p.loop ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].loop = !state.editorDraft.phases[${i}].loop; updateDraftHashBadge(); render();"><i class="fa-solid fa-repeat"></i></button><button class="icon-btn ${p.fxAlarm ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].fxAlarm = !state.editorDraft.phases[${i}].fxAlarm; updateDraftHashBadge(); render();"><i class="fa-solid fa-bullhorn"></i></button><button class="icon-btn ${p.winner ? 'active-toggle' : ''}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.phases[${i}].winner = !state.editorDraft.phases[${i}].winner; updateDraftHashBadge(); render();"><i class="fa-solid fa-trophy"></i></button></div></div></div>`; }).join('');
  const finalsHtml = d.finals.map((f, i) => { const isNone = !f.color || f.color === 'none'; const isWhite = f.color === 'white'; const itemColorCss = getColorCss(f.color, 'var(--border)'); return `<div id="ed-item-final-${i}" class="editor-item" style="--item-color: ${itemColorCss}"><div class="editor-item-main"><div class="color-cycle-btn ${isNone ? 'is-none' : ''} ${isWhite ? 'is-white' : ''}" style="background: ${isNone ? 'transparent' : PALETTE[f.color]}" onpointerdown="event.preventDefault()" onclick="Haptics.tap(); state.editorDraft.finals[${i}].color = cycleItemColor('${f.color}'); updateDraftHashBadge(); render();">${isNone ? '<i class="fa-solid fa-ban"></i>' : ''}</div><input class="text-input" value="${escapeHtml(f.title)}" placeholder="Baigties pavadinimas" oninput="state.editorDraft.finals[${i}].title = this.value; updateDraftHashBadge();" /><button id="ed-del-final-${i}" class="icon-btn del hold-btn" oncontextmenu="return false;" onpointerdown="startEditorItemDeleteHold('final', ${i}, event)"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('');
- app.innerHTML = `<div class="edge-fade-top"></div><div class="top-bar"><div class="top-actions"><button class="sm" onclick="exitEditorToHome()"><i class="fa-solid fa-house"></i></button><button class="sm" onclick="exitEditorToPregame()"><i class="fa-solid fa-play"></i></button></div><div class="top-actions"><button id="editor-del-btn" class="sm editor-del-top-btn hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startEditorDeleteHold(event)"><i class="fa-solid fa-trash"></i></button><button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()"><i class="fa-solid fa-check"></i></button></div></div><div class="screen-scroll editor-scroll"><div class="editor-wrap"><div class="editor-section"><div class="section-head" style="justify-content: flex-end; min-height: auto;"><span class="hash-badge" id="draft-hash-badge">#${d.hash}</span></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-i"></i></div><input id="editor-title-input" class="text-input" value="${escapeHtml(d.title)}" oninput="state.editorDraft.title = this.value; updateDraftHashBadge();" /></div><div class="palette-row">${colorSwatchesHtml}</div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-bookmark"></i></div><input class="text-input" maxlength="110" value="${escapeHtml(d.short_description || '')}" oninput="state.editorDraft.short_description = this.value.slice(0, 110); updateDraftHashBadge();" /></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-align-justify"></i></div><textarea class="text-input desc-textarea" rows="3" maxlength="1000" oninput="state.editorDraft.description = this.value.slice(0, 1000); updateDraftHashBadge();">${escapeHtml(d.description || '')}</textarea></div>${imgPanelHtml}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-flag"></i> (${d.groups.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addGroupInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.groups.length > 0 ? `<div class="editor-item-list">${groupsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-masks-theater"></i> (${d.cards.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addCardInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.cards.length > 0 ? `<div class="editor-item-list">${cardsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-play"></i> (${d.phases.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addPhaseInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.phases.length > 0 ? `<div class="editor-item-list">${phasesHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-trophy"></i> (${d.finals.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addFinalInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.finals.length > 0 ? `<div class="editor-item-list">${finalsHtml}</div>` : ''}</div></div></div><div class="bottom-bar"></div>`; const el = app.querySelector('.editor-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
+ app.innerHTML = `<div class="edge-fade-top"></div><div class="top-bar"><div class="top-actions"><button class="sm" onclick="exitEditorToHome()"><i class="fa-solid fa-house"></i></button><button class="sm" onclick="exitEditorToPregame()"><i class="fa-solid fa-play"></i></button></div><div class="top-actions"><button id="editor-del-btn" class="sm editor-del-top-btn hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startEditorDeleteHold(event)"><i class="fa-solid fa-trash"></i></button><button id="editor-pub-btn" class="sm hold-btn" style="--hold-color: var(--c-blue)" oncontextmenu="return false;" onpointerdown="startEditorPublishHold(event)" aria-label="Publikuoti"><i class="fa-solid fa-cloud-arrow-up"></i></button><button id="editor-save-btn" class="sm ${dirty ? 'btn-confirm' : ''}" onclick="saveEditorChanges()"><i class="fa-solid fa-check"></i></button></div></div><div class="screen-scroll editor-scroll"><div class="editor-wrap"><div class="editor-section"><div class="section-head" style="justify-content: flex-end; min-height: auto;"><span class="hash-badge" id="draft-hash-badge">#${d.hash}</span></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-i"></i></div><input id="editor-title-input" class="text-input" value="${escapeHtml(d.title)}" oninput="state.editorDraft.title = this.value; updateDraftHashBadge();" /></div><div class="palette-row">${colorSwatchesHtml}</div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-bookmark"></i></div><input class="text-input" maxlength="110" value="${escapeHtml(d.short_description || '')}" oninput="state.editorDraft.short_description = this.value.slice(0, 110); updateDraftHashBadge();" /></div><div class="editor-desc-row"><div class="editor-desc-icon"><i class="fa-solid fa-align-justify"></i></div><textarea class="text-input desc-textarea" rows="3" maxlength="1000" oninput="state.editorDraft.description = this.value.slice(0, 1000); updateDraftHashBadge();">${escapeHtml(d.description || '')}</textarea></div>${imgPanelHtml}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-flag"></i> (${d.groups.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addGroupInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.groups.length > 0 ? `<div class="editor-item-list">${groupsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-masks-theater"></i> (${d.cards.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addCardInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.cards.length > 0 ? `<div class="editor-item-list">${cardsHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-play"></i> (${d.phases.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addPhaseInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.phases.length > 0 ? `<div class="editor-item-list">${phasesHtml}</div>` : ''}</div><div class="editor-section"><div class="section-head"><span class="section-head-label"><i class="fa-solid fa-trophy"></i> (${d.finals.length})</span><button class="xs" onpointerdown="event.preventDefault()" onclick="addFinalInEditor(event)"><i class="fa-solid fa-plus"></i></button></div>${d.finals.length > 0 ? `<div class="editor-item-list">${finalsHtml}</div>` : ''}</div></div></div><div class="bottom-bar"></div>`; const el = app.querySelector('.editor-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
 }
 
 function renderDeal(app) {
