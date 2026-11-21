@@ -571,17 +571,6 @@ const CacheStore = {
  await cache.delete(`https://c4rdx5.local/${cacheName}/${hash}`);
  } catch (_) {}
  }
- },
- async clear(cacheName, memFallback) {
- memFallback.clear();
- if (cacheName === this.MY_CACHE) {
-  this._writeMyLs(memFallback);
- }
- if ('caches' in window) {
- try {
- await caches.delete(cacheName);
- } catch (_) {}
- }
  }
 };
 
@@ -612,9 +601,6 @@ const SessionStore = {
  removeForGame(hash) {
  if (!hash) return;
  try { const all = this._readAll(); if (all[hash]) { delete all[hash]; localStorage.setItem(this.STORAGE_KEY, JSON.stringify(all)); } } catch (_) {}
- },
- clearAll() {
- try { localStorage.removeItem(this.STORAGE_KEY); } catch (_) {}
  }
 };
 
@@ -1008,34 +994,21 @@ async function handleArchiveFileChange(event) {
  }
 }
 
-function openRandomPublicGame() {
- if (!PUBLIC_GAMES || PUBLIC_GAMES.length === 0) return;
- Haptics.tap(); const randIdx = Math.floor(Math.random() * PUBLIC_GAMES.length); openGameSession(PUBLIC_GAMES[randIdx], { isPublic: true });
-}
-
-function startClearFavHold(e) {
- HoldEngine.startOverlayHold({
-  key: 'clear:fav', btnId: 'clear-fav-btn', colorCss: 'var(--c-red)', isDanger: true,
-  innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-red)"><i class="fa-solid fa-trash"></i></div>`,
-  async onComplete() {
-   await CacheStore.clear(CacheStore.FAV_CACHE, CacheStore.memFav);
-   await refreshCatalogState();
-   render();
-  }
- });
-}
-
-function startClearRecentHold(e) {
- HoldEngine.startOverlayHold({
-  key: 'clear:recent', btnId: 'clear-recent-btn', colorCss: 'var(--c-red)', isDanger: true,
-  innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-red)"><i class="fa-solid fa-trash"></i></div>`,
-  async onComplete() {
-   await CacheStore.clear(CacheStore.RECENT_CACHE, CacheStore.memRecent);
-   SessionStore.clearAll();
-   await refreshCatalogState();
-   render();
-  }
- });
+function openRandomGameForTab(tab) {
+ let list = [];
+ let isPublic;
+ if (tab === 'pub') {
+  list = PUBLIC_GAMES;
+  isPublic = true;
+ } else if (tab === 'fav') {
+  list = state.favGames;
+ } else if (tab === 'recent') {
+  list = state.recentGames;
+ }
+ if (!list || list.length === 0) return;
+ Haptics.tap();
+ const chosen = list[Math.floor(Math.random() * list.length)];
+ openGameSession(chosen, { isPublic: typeof isPublic === 'boolean' ? isPublic : isPublicCatalogGame(chosen.hash) });
 }
 
 async function openGameSession(gameObj, options = {}) {
@@ -1484,21 +1457,25 @@ function renderHome(app, savedScroll) {
  if (tab === 'pub') {
   listContentHtml = PUBLIC_GAMES.map(g => renderCatalogCard(g, { mode: 'fav', extraOptions: '{ isPublic: true }' })).join('');
   bottomActionHtml = hasPublicGames
-   ? `<button class="lg" onclick="openRandomPublicGame()" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
+   ? `<button class="lg" onclick="openRandomGameForTab('pub')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
    : `<button class="lg" style="--accent: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()" aria-label="Atnaujinti"><i class="fa-solid fa-arrows-rotate"></i></button>`;
  } else if (tab === 'fav') {
   listContentHtml = state.favGames.map(g => renderCatalogCard(g, { mode: 'fav', forceStarActive: true })).join('');
-  bottomActionHtml = `<button id="clear-fav-btn" class="lg hold-btn" style="--accent: var(--c-red); --hold-color: var(--c-red); color: var(--c-red);" oncontextmenu="return false;" onpointerdown="startClearFavHold(event)" aria-label="Išvalyti mėgstamus"><i class="fa-solid fa-trash"></i></button>`;
+  bottomActionHtml = state.favGames.length > 0
+   ? `<button class="lg" onclick="openRandomGameForTab('fav')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
+   : '';
  } else if (tab === 'recent') {
   listContentHtml = state.recentGames.map(g => renderCatalogCard(g, { mode: 'fav' })).join('');
-  bottomActionHtml = `<button id="clear-recent-btn" class="lg hold-btn" style="--accent: var(--c-red); --hold-color: var(--c-red); color: var(--c-red);" oncontextmenu="return false;" onpointerdown="startClearRecentHold(event)" aria-label="Išvalyti istoriją"><i class="fa-solid fa-trash"></i></button>`;
+  bottomActionHtml = state.recentGames.length > 0
+   ? `<button class="lg" onclick="openRandomGameForTab('recent')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
+   : '';
  } else if (tab === 'my') {
   listContentHtml = state.myGames.map(g => renderCatalogCard(g, { mode: 'edit' })).join('');
   bottomActionHtml = `<button class="lg" style="--accent: var(--c-emerald); color: var(--c-emerald);" onclick="openEditorForNew()" aria-label="Naujas žaidimas"><i class="fa-solid fa-plus"></i></button>`;
  }
  const emptyIcon = CATALOG_TAB_ICONS[tab] || 'fa-globe';
  const panelBodyHtml = listContentHtml ? `<div class="catalog-list">${listContentHtml}</div>` : `<div class="catalog-empty" aria-hidden="true"><i class="fa-solid ${emptyIcon}"></i></div>`;
- app.innerHTML = `<div class="edge-fade-top"></div><div class="edge-fade-bottom"></div>${renderBrandHeader({ isSettings: false })}<div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel">${panelBodyHtml}</div></div><div class="bottom-bar floating-bottom"><div class="action-row">${bottomActionHtml}</div></div>`;
+ app.innerHTML = `<div class="edge-fade-top"></div>${bottomActionHtml ? '<div class="edge-fade-bottom"></div>' : ''}${renderBrandHeader({ isSettings: false })}<div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel">${panelBodyHtml}</div></div>${bottomActionHtml ? `<div class="bottom-bar floating-bottom"><div class="action-row">${bottomActionHtml}</div></div>` : ''}`;
  if (savedScroll > 0) window.scrollTo(0, savedScroll);
 }
 
