@@ -101,15 +101,9 @@
  .catalog-tab:active { transform: scale(0.96); }
  .catalog-tab.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); box-shadow: 0 0 14px -5px var(--accent); }
  .catalog-tab-count { font-size: 0.8rem; opacity: 0.85; }
- .catalog-panel { width: 100%; display: flex; flex-direction: column; gap: 10px; }
- .catalog-action-btn { width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--border-float); background: var(--surface); color: var(--text); font-size: 1.2rem; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; flex-shrink: 0; }
- .catalog-action-btn:active { transform: scale(0.985); }
- .catalog-action-btn.create-action { border-color: var(--accent); color: var(--text); box-shadow: 0 0 16px -8px var(--accent); }
- .catalog-action-btn.danger-action { border-color: rgba(239, 68, 68, 0.4); color: var(--c-red); }
- .catalog-action-btn.hold-btn.holding { transform: scale(0.985); }
+ .catalog-panel { width: 100%; display: block; }
  .catalog-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 118px; }
  .catalog-empty { width: 100%; min-height: calc(100vh - 260px); min-height: calc(100dvh - 260px); display: flex; align-items: center; justify-content: center; padding-bottom: 64px; pointer-events: none; }
- .catalog-action-btn + .catalog-empty { min-height: calc(100vh - 320px); min-height: calc(100dvh - 320px); }
  .catalog-empty i { font-size: clamp(5.5rem, 24vw, 7.5rem); color: var(--muted); opacity: 0.08; }
  .catalog-card { display: flex; flex-direction: row; align-items: stretch; height: 112px; gap: 0; padding: 0; background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--card-accent, var(--c-blue)); border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform 0.16s ease, border-color 0.2s; flex-shrink: 0; }
  .catalog-card:active { transform: scale(0.985); }
@@ -1019,6 +1013,18 @@ function openRandomPublicGame() {
  Haptics.tap(); const randIdx = Math.floor(Math.random() * PUBLIC_GAMES.length); openGameSession(PUBLIC_GAMES[randIdx], { isPublic: true });
 }
 
+function startClearFavHold(e) {
+ HoldEngine.startOverlayHold({
+  key: 'clear:fav', btnId: 'clear-fav-btn', colorCss: 'var(--c-red)', isDanger: true,
+  innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-red)"><i class="fa-solid fa-trash"></i></div>`,
+  async onComplete() {
+   await CacheStore.clear(CacheStore.FAV_CACHE, CacheStore.memFav);
+   await refreshCatalogState();
+   render();
+  }
+ });
+}
+
 function startClearRecentHold(e) {
  HoldEngine.startOverlayHold({
   key: 'clear:recent', btnId: 'clear-recent-btn', colorCss: 'var(--c-red)', isDanger: true,
@@ -1445,7 +1451,7 @@ function renderBrandHeader({ isSettings = false } = {}) {
  const rightBtn = isSettings
   ? `<button class="sm" onclick="Haptics.tap(); goToHome()" aria-label="Uždaryti"><i class="fa-solid fa-xmark"></i></button>`
   : `<button class="sm" onclick="openSettings()" aria-label="Nustatymai"><i class="fa-solid fa-gear"></i></button>`;
- return `<div class="top-bar catalog-brand-bar"><a href="${homeUrl}" class="catalog-brand-link" onclick="handleBrandTap(event)"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="" class="catalog-brand-logo" /><span class="catalog-brand-name">C4RD<span class="brand-accent">x5</span></span></a><div class="top-actions"><button class="sm" onclick="SoundEngine.toggleMute()" aria-label="Garsas"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button>${rightBtn}</div></div>`;
+ return `<div class="top-bar catalog-brand-bar"><a href="${homeUrl}" class="catalog-brand-link" onclick="handleBrandTap(event)"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="" class="catalog-brand-logo" /><span class="catalog-brand-name">C4RD<span class="brand-accent">x5</span></span></a><div class="top-actions">${rightBtn}</div></div>`;
 }
 
 function renderCatalogCard(g, { mode = 'fav', forceStarActive = false, extraOptions = null } = {}) {
@@ -1474,23 +1480,24 @@ function renderHome(app, savedScroll) {
  const tab = state.catalogTab || 'pub';
  const hasPublicGames = PUBLIC_GAMES.length > 0;
  let listContentHtml = '';
- let topActionHtml = '';
+ let bottomActionHtml = '';
  if (tab === 'pub') {
   listContentHtml = PUBLIC_GAMES.map(g => renderCatalogCard(g, { mode: 'fav', extraOptions: '{ isPublic: true }' })).join('');
+  bottomActionHtml = hasPublicGames
+   ? `<button class="lg" onclick="openRandomPublicGame()" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
+   : `<button class="lg" style="--accent: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()" aria-label="Atnaujinti"><i class="fa-solid fa-arrows-rotate"></i></button>`;
  } else if (tab === 'fav') {
   listContentHtml = state.favGames.map(g => renderCatalogCard(g, { mode: 'fav', forceStarActive: true })).join('');
+  bottomActionHtml = `<button id="clear-fav-btn" class="lg hold-btn" style="--accent: var(--c-red); --hold-color: var(--c-red); color: var(--c-red);" oncontextmenu="return false;" onpointerdown="startClearFavHold(event)" aria-label="Išvalyti mėgstamus"><i class="fa-solid fa-trash"></i></button>`;
  } else if (tab === 'recent') {
-  topActionHtml = `<button id="clear-recent-btn" class="catalog-action-btn danger-action hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startClearRecentHold(event)" aria-label="Išvalyti istoriją"><i class="fa-solid fa-trash"></i></button>`;
   listContentHtml = state.recentGames.map(g => renderCatalogCard(g, { mode: 'fav' })).join('');
+  bottomActionHtml = `<button id="clear-recent-btn" class="lg hold-btn" style="--accent: var(--c-red); --hold-color: var(--c-red); color: var(--c-red);" oncontextmenu="return false;" onpointerdown="startClearRecentHold(event)" aria-label="Išvalyti istoriją"><i class="fa-solid fa-trash"></i></button>`;
  } else if (tab === 'my') {
-  topActionHtml = `<button class="catalog-action-btn create-action" onclick="openEditorForNew()" aria-label="Naujas žaidimas"><i class="fa-solid fa-plus"></i></button>`;
   listContentHtml = state.myGames.map(g => renderCatalogCard(g, { mode: 'edit' })).join('');
+  bottomActionHtml = `<button class="lg" style="--accent: var(--c-emerald); color: var(--c-emerald);" onclick="openEditorForNew()" aria-label="Naujas žaidimas"><i class="fa-solid fa-plus"></i></button>`;
  }
  const emptyIcon = CATALOG_TAB_ICONS[tab] || 'fa-globe';
- const panelBodyHtml = `${topActionHtml}${listContentHtml ? `<div class="catalog-list">${listContentHtml}</div>` : `<div class="catalog-empty" aria-hidden="true"><i class="fa-solid ${emptyIcon}"></i></div>`}`;
- const bottomActionHtml = hasPublicGames
-  ? `<button class="lg" onclick="openRandomPublicGame()"><i class="fa-solid fa-dice"></i></button>`
-  : `<button class="lg" style="border-color: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()"><i class="fa-solid fa-arrows-rotate"></i></button>`;
+ const panelBodyHtml = listContentHtml ? `<div class="catalog-list">${listContentHtml}</div>` : `<div class="catalog-empty" aria-hidden="true"><i class="fa-solid ${emptyIcon}"></i></div>`;
  app.innerHTML = `<div class="edge-fade-top"></div><div class="edge-fade-bottom"></div>${renderBrandHeader({ isSettings: false })}<div class="catalog-wrap"><div class="catalog-tabs"><button class="catalog-tab ${tab === 'pub' ? 'active' : ''}" onclick="selectCatalogTab('pub')"><i class="fa-solid fa-globe"></i><span class="catalog-tab-count">${PUBLIC_GAMES.length}</span></button><button class="catalog-tab ${tab === 'fav' ? 'active' : ''}" onclick="selectCatalogTab('fav')"><i class="fa-solid fa-star"></i><span class="catalog-tab-count">${state.favGames.length}</span></button><button class="catalog-tab ${tab === 'recent' ? 'active' : ''}" onclick="selectCatalogTab('recent')"><i class="fa-solid fa-clock-rotate-left"></i><span class="catalog-tab-count">${state.recentGames.length}</span></button><button class="catalog-tab ${tab === 'my' ? 'active' : ''}" onclick="selectCatalogTab('my')"><i class="fa-solid fa-pen-to-square"></i><span class="catalog-tab-count">${state.myGames.length}</span></button></div><div class="catalog-panel">${panelBodyHtml}</div></div><div class="bottom-bar floating-bottom"><div class="action-row">${bottomActionHtml}</div></div>`;
  if (savedScroll > 0) window.scrollTo(0, savedScroll);
 }
