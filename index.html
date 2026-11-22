@@ -108,11 +108,8 @@
  .catalog-empty i { font-size: clamp(5.5rem, 24vw, 7.5rem); color: var(--muted); opacity: 0.08; }
  .catalog-card { display: flex; flex-direction: row; align-items: stretch; height: 112px; gap: 0; padding: 0; background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--card-accent, var(--c-blue)); border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform 0.16s ease, border-color 0.2s; flex-shrink: 0; }
  .catalog-card:active { transform: scale(0.985); }
- .catalog-card-media { position: relative; flex: 0 0 110px; width: 110px; height: 110px; border-right: 1px solid var(--border); background: var(--bg); overflow: hidden; cursor: pointer; }
+ .catalog-card-media { position: relative; flex: 0 0 110px; width: 110px; height: 110px; border-right: 1px solid var(--border); background: var(--bg); overflow: hidden; }
  .catalog-card-media img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
- .catalog-play-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; width: 44px; height: 44px; border-radius: 50%; background: rgba(9, 10, 15, 0.42); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border: 1.5px solid rgba(255, 255, 255, 0.42); color: rgba(255, 255, 255, 0.94); display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45); pointer-events: none; transition: transform 0.12s ease, background 0.15s ease; }
- .catalog-play-circle i { margin-left: 2px; }
- .catalog-card-media:active .catalog-play-circle { transform: translate(-50%, -50%) scale(0.9); background: rgba(9, 10, 15, 0.65); }
  .catalog-card-content { display: flex; flex-direction: column; justify-content: space-between; padding: 9px 10px 8px 11px; min-width: 0; flex: 1; }
  .catalog-card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
  .catalog-card-title { font-size: 1rem; font-weight: 700; color: var(--text); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1444,8 +1441,6 @@ function renderTimerOnly() {
  }
 }
 function openGameByHashFromList(hash, options = {}) { Haptics.tap(); const g = findGameAnySourceByHash(hash); if (g) openGameSession(g, options); }
-function playGameFromCatalog(hash, e, options = {}) { if (e) e.stopPropagation(); openGameByHashFromList(hash, options); }
-function openGameInfoFromCatalog(hash, e, options = {}) { if (e) e.stopPropagation(); openGameByHashFromList(hash, options); }
 
 function renderBrandHeader({ isSettings = false } = {}) {
  const homeUrl = escapeHtml(getBaseShareUrl());
@@ -1457,15 +1452,12 @@ function renderBrandHeader({ isSettings = false } = {}) {
 
 function renderCatalogCard(g, { mode = 'fav', forceStarActive = false, extraOptions = null } = {}) {
  const cardClickCall = extraOptions ? `openGameByHashFromList('${g.hash}', ${extraOptions})` : `openGameByHashFromList('${g.hash}')`;
- const playClickCall = extraOptions ? `playGameFromCatalog('${g.hash}', event, ${extraOptions})` : `playGameFromCatalog('${g.hash}', event)`;
- const infoClickCall = extraOptions ? `openGameInfoFromCatalog('${g.hash}', event, ${extraOptions})` : `openGameInfoFromCatalog('${g.hash}', event)`;
  const descHtml = `<div class="catalog-card-desc">${escapeHtml(g.short_description || '')}</div>`;
  const groupsCount = Array.isArray(g.groups) ? g.groups.length : 0;
  const cardsCount = Array.isArray(g.cards) ? g.cards.length : 0;
  const fallbackImgUrl = escapeHtml(getImageUrl(''));
- const mediaHtml = `<div class="catalog-card-media" role="button" aria-label="Žaisti" onclick="${playClickCall}"><img src="${escapeHtml(getImageUrl(g.img))}" loading="lazy" alt="" onerror="this.onerror=null; this.src='${fallbackImgUrl}';" /><span class="catalog-play-circle" aria-hidden="true"><i class="fa-solid fa-play"></i></span></div>`;
+ const mediaHtml = `<div class="catalog-card-media"><img src="${escapeHtml(getImageUrl(g.img))}" loading="lazy" alt="" onerror="this.onerror=null; this.src='${fallbackImgUrl}';" /></div>`;
  const metaHtml = `<div class="catalog-card-meta"><span class="catalog-meta-stat"><i class="fa-solid fa-flag"></i> ${groupsCount}</span><span class="catalog-meta-stat"><i class="fa-solid fa-masks-theater"></i> ${cardsCount}</span></div>`;
- const infoBtnHtml = `<button class="xs" onclick="${infoClickCall}" aria-label="Informacija"><i class="fa-solid fa-info"></i></button>`;
  let primaryActionHtml = '';
  if (mode === 'edit') {
   primaryActionHtml = `<button class="xs" onclick="openEditorByHash('${g.hash}', event)" aria-label="Redaguoti"><i class="fa-solid fa-pen-to-square"></i></button>`;
@@ -1473,7 +1465,7 @@ function renderCatalogCard(g, { mode = 'fav', forceStarActive = false, extraOpti
   const faved = forceStarActive || isFavorited(g.hash);
   primaryActionHtml = `<button class="xs ${faved ? 'star-active' : ''}" onclick="toggleFavoriteGame('${g.hash}', event)" aria-label="Mėgstami"><i class="${faved ? 'fa-solid' : 'fa-regular'} fa-star"></i></button>`;
  }
- return `<div class="catalog-card" style="--card-accent: ${getColorCss(g.color)}" onclick="${cardClickCall}">${mediaHtml}<div class="catalog-card-content"><div class="catalog-card-text"><div class="catalog-card-title">${escapeHtml(g.title)}</div>${descHtml}</div><div class="catalog-card-foot">${metaHtml}<div class="catalog-card-actions">${infoBtnHtml}${primaryActionHtml}</div></div></div></div>`;
+ return `<div class="catalog-card" style="--card-accent: ${getColorCss(g.color)}" onclick="${cardClickCall}">${mediaHtml}<div class="catalog-card-content"><div class="catalog-card-text"><div class="catalog-card-title">${escapeHtml(g.title)}</div>${descHtml}</div><div class="catalog-card-foot">${metaHtml}<div class="catalog-card-actions">${primaryActionHtml}</div></div></div></div>`;
 }
 
 // === RENDER SUBSYSTEM ===
