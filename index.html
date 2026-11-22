@@ -125,12 +125,15 @@
  .star-active { color: var(--c-amber) !important; border-color: rgba(245, 158, 11, 0.45) !important; }
  .copied-check { color: var(--c-emerald) !important; border-color: rgba(16, 185, 129, 0.55) !important; background: rgba(16, 185, 129, 0.12) !important; }
 
- /* --- Pregame & Editor & Playing --- */
+ /* --- Pregame, Roles, Editor & Playing --- */
  .game-header { text-align: center; margin: 2px 0 12px; width: 100%; max-width: 460px; flex-shrink: 0; }
  .game-thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.85); }
  .game-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
  .game-title { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; border-bottom: 3px solid var(--accent); padding-bottom: 6px; display: inline-block; word-break: break-word; }
- .game-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.35; margin: 8px auto 0 auto; max-width: 420px; word-break: break-word; white-space: pre-line; }
+ .game-meta { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+ .game-meta .catalog-meta-stat { font-size: 0.85rem; padding: 6px 10px; border-radius: 8px; gap: 6px; }
+ .game-short-desc { font-size: 0.98rem; font-weight: 600; color: var(--text); line-height: 1.4; margin: 14px auto 0 auto; max-width: 420px; word-break: break-word; }
+ .game-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.45; margin: 10px auto 0 auto; max-width: 420px; word-break: break-word; white-space: pre-line; }
  .counter-pill { font-size: 1.25rem; font-weight: 700; color: var(--text); display: inline-flex; align-items: center; gap: 12px; background: rgba(18, 21, 31, 0.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 8px 20px; border-radius: 999px; border: 1px solid var(--border-float); box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.6); flex-shrink: 0; }
  .card-list { width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 8px; padding: 4px 0; margin-top: 14px; flex-shrink: 0; }
  .card-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); padding: 9px 14px; border-radius: 12px; border-left: 5px solid var(--row-color, var(--border)); gap: 10px; flex-shrink: 0; }
@@ -1192,12 +1195,17 @@ function triggerBarrier() {
 async function requestWakeLock() {
  if ('wakeLock' in navigator && !state.wakeLock) { try { state.wakeLock = await navigator.wakeLock.request('screen'); state.wakeLock.addEventListener('release', () => { state.wakeLock = null; }); } catch (_) {} }
 }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (isPlayAudioAllowed()) SoundEngine.ensureContext(); if (!['HOME', 'PREGAME', 'EDITOR'].includes(state.screen)) requestWakeLock(); } });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (isPlayAudioAllowed()) SoundEngine.ensureContext(); if (!['HOME', 'SETTINGS', 'PREGAME', 'ROLES', 'EDITOR'].includes(state.screen)) requestWakeLock(); } });
 function shuffleArray(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 function goToPregame() {
  HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
  state.alarmActive = false; state.screen = 'PREGAME'; document.title = getGameTitleWithHash(state.baseGame);
+ clearAppEffects(); setAccent(state.baseGame.color); render();
+}
+function goToRoles() {
+ HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
+ state.alarmActive = false; state.screen = 'ROLES'; document.title = getGameTitleWithHash(state.baseGame);
  clearAppEffects(); setAccent(state.baseGame.color); render();
 }
 function adjustCustomCount(cardId, delta) {
@@ -1503,17 +1511,37 @@ function renderHome(app, savedScroll) {
 }
 
 function renderPregame(app, savedScroll) {
- const game = state.baseGame; let deckCount = 0; let modeControlsHtml = '';
- const hasCards = game.cards && game.cards.length > 0;
- const isSavedInMyGames = isInMyGames(game.hash); const showEditButton = isSavedInMyGames || state.currentGameIsPublic; const isCopied = state.copiedShareHash === game.hash;
- if (hasCards) {
- deckCount = getCustomDeckSize();
- const rows = game.cards.map(c => { const resolvedColor = resolveCardColorKey(game, c); const grp = getGroupById(game, c.groupId); return `<div class="card-row" style="--row-color: ${getColorCss(resolvedColor, 'var(--border)')}"><div class="card-row-info"><span class="card-row-title">${escapeHtml(c.title)}</span>${grp ? `<span class="card-row-group">${escapeHtml(grp.title)}</span>` : ''}</div><div class="stepper"><button class="sm" onclick="adjustCustomCount('${c.id}', -1)"><i class="fa-solid fa-minus"></i></button><span>${state.customCounts[c.id] ?? 0}</span><button class="sm" onclick="adjustCustomCount('${c.id}', 1)"><i class="fa-solid fa-plus"></i></button></div></div>`; }).join('');
- modeControlsHtml = `<div class="counter-pill"><i class="fa-solid fa-users"></i> ${deckCount}</div><div class="card-list">${rows}</div>`;
- }
- const showBottomActions = hasCards && deckCount > 0;
- app.innerHTML = `<div class="edge-fade-top"></div>${showBottomActions ? `<div class="edge-fade-bottom"></div>` : ''}<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToHome()"><i class="fa-solid fa-house"></i></button><div class="top-actions">${showEditButton ? `<button class="sm" onclick="openEditorFromPregame()"><i class="fa-solid fa-pen-to-square"></i></button>` : `<button class="sm" onclick="saveCurrentGameInPregame()"><i class="fa-solid fa-cloud-arrow-down"></i></button>`}<button class="sm ${isCopied ? 'copied-check' : ''}" onclick="shareCurrentGame(event)"><i class="fa-solid ${isCopied ? 'fa-check' : 'fa-share-nodes'}"></i></button></div></div><div class="screen-scroll pregame-scroll"><div class="game-header"><div class="game-thumb"><img src="${escapeHtml(getImageUrl(game.img))}" alt="" onerror="this.onerror=null; this.src='${escapeHtml(getImageUrl(''))}';" /></div><div class="game-title">${escapeHtml(game.title)}</div>${game.description ? `<div class="game-desc">${escapeHtml(game.description)}</div>` : ''}</div>${modeControlsHtml}</div><div class="bottom-bar"><div class="action-row">${showBottomActions ? `<button class="lg" onclick="startDealing()"><i class="fa-solid fa-masks-theater"></i></button>` : ''}</div></div>`;
+ const game = state.baseGame;
+ const groupsCount = Array.isArray(game.groups) ? game.groups.length : 0;
+ const cardsCount = Array.isArray(game.cards) ? game.cards.length : 0;
+ const hasCards = cardsCount > 0;
+ const hasPhases = Array.isArray(game.phases) && game.phases.length > 0;
+ const isSavedInMyGames = isInMyGames(game.hash);
+ const showEditButton = isSavedInMyGames || state.currentGameIsPublic;
+ const isCopied = state.copiedShareHash === game.hash;
+ const showBottomActions = hasCards || hasPhases;
+ const bottomActionHtml = hasCards
+  ? `<button class="lg" onclick="Haptics.tap(); goToRoles()" aria-label="Rolių pasirinkimas"><i class="fa-solid fa-play"></i></button>`
+  : (hasPhases ? `<button class="lg" onclick="Haptics.tap(); startPhases()" aria-label="Pradėti žaidimą"><i class="fa-solid fa-play"></i></button>` : '');
+ const metaHtml = `<div class="game-meta"><span class="catalog-meta-stat"><i class="fa-solid fa-flag"></i> ${groupsCount}</span><span class="catalog-meta-stat"><i class="fa-solid fa-masks-theater"></i> ${cardsCount}</span></div>`;
+ app.innerHTML = `<div class="edge-fade-top"></div>${showBottomActions ? `<div class="edge-fade-bottom"></div>` : ''}<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToHome()" aria-label="Pradžia"><i class="fa-solid fa-house"></i></button><div class="top-actions">${showEditButton ? `<button class="sm" onclick="openEditorFromPregame()" aria-label="Redaguoti"><i class="fa-solid fa-pen-to-square"></i></button>` : `<button class="sm" onclick="saveCurrentGameInPregame()" aria-label="Išsaugoti"><i class="fa-solid fa-cloud-arrow-down"></i></button>`}<button class="sm ${isCopied ? 'copied-check' : ''}" onclick="shareCurrentGame(event)" aria-label="Dalintis"><i class="fa-solid ${isCopied ? 'fa-check' : 'fa-share-nodes'}"></i></button></div></div><div class="screen-scroll pregame-scroll"><div class="game-header"><div class="game-thumb"><img src="${escapeHtml(getImageUrl(game.img))}" alt="" onerror="this.onerror=null; this.src='${escapeHtml(getImageUrl(''))}';" /></div><div class="game-title">${escapeHtml(game.title)}</div>${metaHtml}${game.short_description ? `<div class="game-short-desc">${escapeHtml(game.short_description)}</div>` : ''}${game.description ? `<div class="game-desc">${escapeHtml(game.description)}</div>` : ''}</div></div><div class="bottom-bar"><div class="action-row">${bottomActionHtml}</div></div>`;
  const el = app.querySelector('.pregame-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
+}
+
+function renderRoles(app, savedScroll) {
+ const game = state.baseGame;
+ const hasCards = Array.isArray(game.cards) && game.cards.length > 0;
+ const deckCount = hasCards ? getCustomDeckSize() : 0;
+ const rows = hasCards
+  ? game.cards.map(c => {
+      const resolvedColor = resolveCardColorKey(game, c);
+      const grp = getGroupById(game, c.groupId);
+      return `<div class="card-row" style="--row-color: ${getColorCss(resolvedColor, 'var(--border)')}"><div class="card-row-info"><span class="card-row-title">${escapeHtml(c.title)}</span>${grp ? `<span class="card-row-group">${escapeHtml(grp.title)}</span>` : ''}</div><div class="stepper"><button class="sm" onclick="adjustCustomCount('${c.id}', -1)"><i class="fa-solid fa-minus"></i></button><span>${state.customCounts[c.id] ?? 0}</span><button class="sm" onclick="adjustCustomCount('${c.id}', 1)"><i class="fa-solid fa-plus"></i></button></div></div>`;
+    }).join('')
+  : '';
+ const showBottomActions = hasCards && deckCount > 0;
+ app.innerHTML = `<div class="edge-fade-top"></div>${showBottomActions ? `<div class="edge-fade-bottom"></div>` : ''}<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToPregame()" aria-label="Atgal"><i class="fa-solid fa-arrow-left"></i></button><div class="counter-pill" style="font-size:1.05rem; padding:6px 16px;"><i class="fa-solid fa-users"></i> ${deckCount}</div><div style="width:42px;"></div></div><div class="screen-scroll pregame-scroll roles-scroll"><div class="card-list" style="margin-top: 2px;">${rows}</div></div><div class="bottom-bar"><div class="action-row">${showBottomActions ? `<button class="lg" onclick="startDealing()" aria-label="Dalinti kortas"><i class="fa-solid fa-check"></i></button>` : ''}</div></div>`;
+ const el = app.querySelector('.roles-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
 }
 
 function renderEditor(app, savedScroll) {
@@ -1584,11 +1612,13 @@ function render() {
  const app = document.getElementById('app');
  const savedEditorScroll = (app.querySelector('.editor-scroll') || {}).scrollTop || 0;
  const savedPregameScroll = (app.querySelector('.pregame-scroll') || {}).scrollTop || 0;
+ const savedRolesScroll = (app.querySelector('.roles-scroll') || {}).scrollTop || 0;
  const savedCatalogScroll = window.scrollY || document.documentElement.scrollTop || 0;
 
  if (isHome) renderHome(app, savedCatalogScroll);
  else if (state.screen === 'SETTINGS') renderSettings(app);
  else if (state.screen === 'PREGAME') renderPregame(app, savedPregameScroll);
+ else if (state.screen === 'ROLES') renderRoles(app, savedRolesScroll);
  else if (state.screen === 'EDITOR') renderEditor(app, savedEditorScroll);
  else if (state.screen === 'DEAL') renderDeal(app);
  else if (state.screen === 'DEAL_DONE') renderDealDone(app);
