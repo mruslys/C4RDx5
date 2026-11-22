@@ -45,9 +45,11 @@
  .screen-scroll { position: absolute; inset: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; align-items: center; padding: calc(78px + env(safe-area-inset-top)) 18px 0 18px; z-index: 10; }
  .screen-scroll::after { content: ""; display: block; width: 100%; height: 36px; flex-shrink: 0; }
  .screen-scroll.pregame-scroll::after { height: 118px; }
+ .screen-scroll.pregame-hero-scroll { padding: 0; }
 
  .edge-fade-top, .edge-fade-bottom { position: fixed; left: 0; right: 0; pointer-events: none; z-index: 90; }
  .edge-fade-top { top: 0; height: calc(76px + env(safe-area-inset-top)); background: linear-gradient(to bottom, rgba(9, 10, 15, 0.92) 0%, rgba(9, 10, 15, 0.55) 55%, rgba(9, 10, 15, 0) 100%); }
+ .edge-fade-top.pregame-fade-top { background: linear-gradient(to bottom, rgba(9, 10, 15, 0.68) 0%, rgba(9, 10, 15, 0.28) 55%, rgba(9, 10, 15, 0) 100%); }
  .edge-fade-bottom { bottom: 0; height: 112px; background: linear-gradient(to top, rgba(9, 10, 15, 0.94) 0%, rgba(9, 10, 15, 0.6) 55%, rgba(9, 10, 15, 0) 100%); }
 
  .fx-start { animation: flashEdge 0.9s ease-out; }
@@ -123,9 +125,10 @@
  .copied-check { color: var(--c-emerald) !important; border-color: rgba(16, 185, 129, 0.55) !important; background: rgba(16, 185, 129, 0.12) !important; }
 
  /* --- Pregame, Roles, Editor & Playing --- */
- .game-header { text-align: center; margin: 2px 0 12px; width: 100%; max-width: 460px; flex-shrink: 0; }
- .game-thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.85); }
- .game-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+ .game-header { text-align: center; margin: 10px 0 12px; padding: 0 18px; width: 100%; max-width: 496px; flex-shrink: 0; }
+ .game-thumb { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: min(44vh, 380px); max-height: min(44dvh, 380px); border-radius: 0; overflow: hidden; background: var(--surface); margin: 0; flex-shrink: 0; }
+ .game-thumb::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(9, 10, 15, 0) 60%, var(--bg) 100%); }
+ .game-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
  .game-title { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; border-bottom: 3px solid var(--accent); padding-bottom: 6px; display: inline-block; word-break: break-word; }
  .game-meta { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
  .game-meta .catalog-meta-stat { font-size: 0.85rem; padding: 6px 10px; border-radius: 8px; gap: 6px; }
@@ -1516,7 +1519,7 @@ function renderPregame(app, savedScroll) {
   ? `<button class="lg" onclick="Haptics.tap(); goToRoles()" aria-label="Rolių pasirinkimas"><i class="fa-solid fa-play"></i></button>`
   : (hasPhases ? `<button class="lg" onclick="Haptics.tap(); startPhases()" aria-label="Pradėti žaidimą"><i class="fa-solid fa-play"></i></button>` : '');
  const metaHtml = `<div class="game-meta"><span class="catalog-meta-stat"><i class="fa-solid fa-flag"></i> ${groupsCount}</span><span class="catalog-meta-stat"><i class="fa-solid fa-masks-theater"></i> ${cardsCount}</span></div>`;
- app.innerHTML = `<div class="edge-fade-top"></div>${showBottomActions ? `<div class="edge-fade-bottom"></div>` : ''}<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToHome()" aria-label="Pradžia"><i class="fa-solid fa-house"></i></button><div class="top-actions">${showEditButton ? `<button class="sm" onclick="openEditorFromPregame()" aria-label="Redaguoti"><i class="fa-solid fa-pen-to-square"></i></button>` : `<button class="sm" onclick="saveCurrentGameInPregame()" aria-label="Išsaugoti"><i class="fa-solid fa-cloud-arrow-down"></i></button>`}<button class="sm ${isCopied ? 'copied-check' : ''}" onclick="shareCurrentGame(event)" aria-label="Dalintis"><i class="fa-solid ${isCopied ? 'fa-check' : 'fa-share-nodes'}"></i></button></div></div><div class="screen-scroll pregame-scroll"><div class="game-header"><div class="game-thumb"><img src="${escapeHtml(getImageUrl(game.img))}" alt="" onerror="this.onerror=null; this.src='${escapeHtml(getImageUrl(''))}';" /></div><div class="game-title">${escapeHtml(game.title)}</div>${metaHtml}${game.short_description ? `<div class="game-short-desc">${escapeHtml(game.short_description)}</div>` : ''}${game.description ? `<div class="game-desc">${escapeHtml(game.description)}</div>` : ''}</div></div><div class="bottom-bar"><div class="action-row">${bottomActionHtml}</div></div>`;
+ app.innerHTML = `<div class="edge-fade-top pregame-fade-top"></div>${showBottomActions ? `<div class="edge-fade-bottom"></div>` : ''}<div class="top-bar"><button class="sm" onclick="Haptics.tap(); goToHome()" aria-label="Pradžia"><i class="fa-solid fa-house"></i></button><div class="top-actions">${showEditButton ? `<button class="sm" onclick="openEditorFromPregame()" aria-label="Redaguoti"><i class="fa-solid fa-pen-to-square"></i></button>` : `<button class="sm" onclick="saveCurrentGameInPregame()" aria-label="Išsaugoti"><i class="fa-solid fa-cloud-arrow-down"></i></button>`}<button class="sm ${isCopied ? 'copied-check' : ''}" onclick="shareCurrentGame(event)" aria-label="Dalintis"><i class="fa-solid ${isCopied ? 'fa-check' : 'fa-share-nodes'}"></i></button></div></div><div class="screen-scroll pregame-scroll pregame-hero-scroll"><div class="game-thumb"><img src="${escapeHtml(getImageUrl(game.img))}" alt="" onerror="this.onerror=null; this.src='${escapeHtml(getImageUrl(''))}';" /></div><div class="game-header"><div class="game-title">${escapeHtml(game.title)}</div>${metaHtml}${game.short_description ? `<div class="game-short-desc">${escapeHtml(game.short_description)}</div>` : ''}${game.description ? `<div class="game-desc">${escapeHtml(game.description)}</div>` : ''}</div></div><div class="bottom-bar"><div class="action-row">${bottomActionHtml}</div></div>`;
  const el = app.querySelector('.pregame-scroll'); if (el && savedScroll > 0) el.scrollTop = savedScroll;
 }
 
