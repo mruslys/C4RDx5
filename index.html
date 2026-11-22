@@ -97,9 +97,10 @@
  /* --- Home Catalog --- */
  .catalog-wrap { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 10px; padding: 2px 2px 0 2px; }
  .catalog-tabs { position: sticky; top: calc(10px + env(safe-area-inset-top)); z-index: 120; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: rgba(18, 21, 31, 0.84); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 6px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 8px 22px -6px rgba(0, 0, 0, 0.72); flex-shrink: 0; }
- .catalog-tab { width: 100%; height: 44px; border-radius: 11px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; box-shadow: none; transition: background 0.18s, color 0.18s, border-color 0.18s; }
+ .catalog-tab { width: 100%; height: 44px; border-radius: 11px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; box-shadow: none; transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s; }
  .catalog-tab:active { transform: scale(0.96); }
  .catalog-tab.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); box-shadow: 0 0 14px -5px var(--accent); }
+ .catalog-tab.active i { color: var(--accent); }
  .catalog-tab-count { font-size: 0.8rem; opacity: 0.85; }
  .catalog-panel { width: 100%; display: block; }
  .catalog-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 118px; }
@@ -246,6 +247,12 @@ const CATALOG_TAB_ICONS = {
  fav: 'fa-star',
  recent: 'fa-clock-rotate-left',
  my: 'fa-pen-to-square'
+};
+const CATALOG_TAB_COLORS = {
+ pub: 'blue',
+ fav: 'amber',
+ recent: 'purple',
+ my: 'emerald'
 };
 
 function getGameTitleWithHash(gameObj) {
@@ -935,7 +942,7 @@ function openSettings() {
 function goToHome() {
  HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
  state.alarmActive = false; state.screen = 'HOME'; document.title = APP_DEFAULT_TITLE;
- clearAppEffects(); setAccent('blue'); render();
+ clearAppEffects(); setAccent(CATALOG_TAB_COLORS[state.catalogTab] || 'blue'); render();
 }
 
 function formatArchiveTimestamp() {
@@ -1464,27 +1471,30 @@ function renderCatalogCard(g, { mode = 'fav', forceStarActive = false, extraOpti
 // === RENDER SUBSYSTEM ===
 function renderHome(app, savedScroll) {
  const tab = state.catalogTab || 'pub';
+ const tabColorKey = CATALOG_TAB_COLORS[tab] || 'blue';
+ const tabColorCss = getColorCss(tabColorKey, 'var(--c-blue)');
+ setAccent(tabColorKey);
  const hasPublicGames = PUBLIC_GAMES.length > 0;
  let listContentHtml = '';
  let bottomActionHtml = '';
  if (tab === 'pub') {
   listContentHtml = PUBLIC_GAMES.map(g => renderCatalogCard(g, { mode: 'fav', extraOptions: '{ isPublic: true }' })).join('');
   bottomActionHtml = hasPublicGames
-   ? `<button class="lg" onclick="openRandomGameForTab('pub')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
+   ? `<button class="lg" style="--accent: ${tabColorCss}; color: ${tabColorCss};" onclick="openRandomGameForTab('pub')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
    : `<button class="lg" style="--accent: var(--c-amber); color: var(--c-amber);" onclick="retryLoadPublicCatalog()" aria-label="Atnaujinti"><i class="fa-solid fa-arrows-rotate"></i></button>`;
  } else if (tab === 'fav') {
   listContentHtml = state.favGames.map(g => renderCatalogCard(g, { mode: 'fav', forceStarActive: true })).join('');
   bottomActionHtml = state.favGames.length > 0
-   ? `<button class="lg" onclick="openRandomGameForTab('fav')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
+   ? `<button class="lg" style="--accent: ${tabColorCss}; color: ${tabColorCss};" onclick="openRandomGameForTab('fav')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
    : '';
  } else if (tab === 'recent') {
   listContentHtml = state.recentGames.map(g => renderCatalogCard(g, { mode: 'fav' })).join('');
   bottomActionHtml = state.recentGames.length > 0
-   ? `<button class="lg" onclick="openRandomGameForTab('recent')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
+   ? `<button class="lg" style="--accent: ${tabColorCss}; color: ${tabColorCss};" onclick="openRandomGameForTab('recent')" aria-label="Atsitiktinis žaidimas"><i class="fa-solid fa-dice"></i></button>`
    : '';
  } else if (tab === 'my') {
   listContentHtml = state.myGames.map(g => renderCatalogCard(g, { mode: 'edit', extraOptions: '{ skipRecent: true }' })).join('');
-  bottomActionHtml = `<button class="lg" style="--accent: var(--c-emerald); color: var(--c-emerald);" onclick="openEditorForNew()" aria-label="Naujas žaidimas"><i class="fa-solid fa-plus"></i></button>`;
+  bottomActionHtml = `<button class="lg" style="--accent: ${tabColorCss}; color: ${tabColorCss};" onclick="openEditorForNew()" aria-label="Naujas žaidimas"><i class="fa-solid fa-plus"></i></button>`;
  }
  const emptyIcon = CATALOG_TAB_ICONS[tab] || 'fa-globe';
  const panelBodyHtml = listContentHtml ? `<div class="catalog-list">${listContentHtml}</div>` : `<div class="catalog-empty" aria-hidden="true"><i class="fa-solid ${emptyIcon}"></i></div>`;
