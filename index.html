@@ -145,8 +145,7 @@
  .stepper span { font-size: 1.15rem; font-weight: 700; min-width: 24px; text-align: center; }
 
  .card-stage { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; }
- .playing-card { position: fixed; inset: 0; width: 100%; height: 100%; border-radius: 0; border: none; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--card-color, var(--accent)) 14%, var(--surface)), var(--bg) 85%); box-shadow: inset 0 0 28px -12px var(--card-color, var(--accent)); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 84px 24px; text-align: center; cursor: pointer; z-index: 20; transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1); }
- .playing-card:active { transform: none; }
+ .playing-card { position: fixed; inset: 0; width: 100%; height: 100%; border-radius: 0; border: none; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--card-color, var(--accent)) 14%, var(--surface)), var(--bg) 85%); box-shadow: inset 0 0 28px -12px var(--card-color, var(--accent)); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 84px 24px; text-align: center; cursor: pointer; z-index: 20; }
  .playing-card.face-down { background: repeating-linear-gradient(135deg, #0d1017, #0d1017 16px, #141824 16px, #141824 32px); box-shadow: none; }
  .card-back-emblem { width: 82px; height: 82px; border-radius: 50%; border: 3px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 2.1rem; color: var(--accent); box-shadow: 0 0 22px -4px var(--accent); background: rgba(9, 10, 15, 0.75); }
  .card-face-group { font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; padding: 4px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); max-width: 100%; word-break: break-word; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
@@ -158,7 +157,8 @@
  .phase-spacer-top { flex: 1; width: 100%; min-height: 8px; }
  .phase-core { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; }
  .phase-title { font-size: 1.9rem; font-weight: 700; color: var(--accent); max-width: 90%; }
- .timer-display { font-size: clamp(4rem, 17vw, 6.2rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.05; white-space: nowrap; cursor: pointer; }
+ .timer-display { font-size: clamp(4rem, 17vw, 6.2rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.05; white-space: nowrap; cursor: pointer; transition: opacity 0.15s ease; }
+ .timer-paused { opacity: 0.45; }
  .timer-blink { color: var(--c-red); animation: blinkTxt 0.5s infinite alternate; }
  .timer-overdue { color: var(--c-red); }
  @keyframes blinkTxt { from { opacity: 1; } to { opacity: 0.2; } }
@@ -181,7 +181,6 @@
  .section-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; min-height: 36px; }
  .section-head-label { display: inline-flex; align-items: center; gap: 7px; }
  .hash-badge { font-family: monospace; font-size: 0.8rem; background: var(--surface-2); padding: 3px 8px; border-radius: 6px; color: var(--c-cyan); border: 1px solid var(--border); }
- .field-row { display: flex; flex-direction: column; gap: 6px; }
  .field-icon { color: var(--muted); font-size: 1rem; }
  .text-input { width: 100%; min-width: 0; flex: 1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 1rem; outline: none; }
  .text-input:focus { border-color: var(--accent); }
@@ -190,7 +189,7 @@
  .color-swatch:active { transform: scale(0.92); }
  .color-swatch.selected { transform: scale(1.16); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px #fff, 0 0 12px currentColor; }
  .editor-item-list { display: flex; flex-direction: column; gap: 10px; }
- .editor-item { background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid var(--item-color, var(--border)); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow: hidden; flex-shrink: 0; transition: transform 0.16s ease, opacity 0.22s ease, max-height 0.22s ease, padding 0.22s ease, margin 0.22s ease, border-color 0.2s; }
+ .editor-item { background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid var(--item-color, var(--border)); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow: hidden; flex-shrink: 0; transition: transform 0.16s ease, opacity 0.22s ease, max-height 0.22s ease, padding 0.22s ease, margin 0.22s ease, border-color 0.2s; }
  .editor-item.deleting-item { opacity: 0 !important; transform: scale(0.93) !important; max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; margin-top: -10px !important; border-width: 0 !important; pointer-events: none !important; }
  .editor-item-main { display: flex; align-items: center; gap: 10px; width: 100%; }
  .editor-item-subrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: nowrap; padding-top: 8px; border-top: 1px dashed var(--border); }
@@ -327,7 +326,7 @@ const HoldEngine = {
  }
  this.rafId = requestAnimationFrame(t => this.step(t));
  },
- startOverlayHold({ key, btnId, colorCss, innerHtml, isDanger = false, noGlow = false, onComplete }) {
+ startOverlayHold({ key, btnId, colorCss, innerHtml, isDanger = false, noGlow = false, onComplete }, e) {
  this.start(key, {
  isDanger,
  onSetup() {
@@ -351,7 +350,7 @@ const HoldEngine = {
  if (overlay) { overlay.classList.remove('active'); overlay.style.opacity = '0'; overlay.style.boxShadow = 'none'; overlay.innerHTML = ''; }
  },
  onComplete
- });
+ }, e);
  }
 };
 
@@ -408,20 +407,48 @@ function getImageUrl(imgId) {
  return `${getApiBaseUrl()}/i/${clean.split('/').map(encodeURIComponent).join('/')}.webp`;
 }
 
-function normalizeGameObject(g) {
- const copy = JSON.parse(JSON.stringify(g || {}));
- copy.title = copy.title || "Žaidimas";
- copy.short_description = sanitizeShortDescription(copy.short_description);
- copy.description = sanitizeDescription(copy.description);
- copy.img = sanitizeImgId(copy.img);
- copy.color = COLOR_KEYS.includes(copy.color) ? copy.color : "blue";
- copy.groups = Array.isArray(copy.groups) ? copy.groups.map((grp, i) => ({ id: grp.id || `g_${i + 1}`, title: grp.title ?? "Grupė", color: ITEM_COLOR_KEYS.includes(grp.color) ? grp.color : "none" })) : [];
- const validGroupIds = new Set(copy.groups.map(grp => grp.id));
- copy.cards = Array.isArray(copy.cards) ? copy.cards.map((c, i) => ({ id: c.id || `c_${i + 1}`, title: c.title ?? "Rolė", groupId: validGroupIds.has(c.groupId) ? c.groupId : "" })) : [];
+function sanitizeId(id, fallback) {
+ const clean = String(id ?? '').replace(/[^a-zA-Z0-9_-]/g, '');
+ return clean || fallback;
+}
+
+function normalizeGameObject(g, { allowEmptyTitle = false } = {}) {
+ const src = g || {};
+ const rawTitle = String(src.title ?? '');
+ const groups = Array.isArray(src.groups) ? src.groups.map((grp, i) => ({
+  id: sanitizeId(grp && grp.id, `g_${i + 1}`),
+  title: String((grp && grp.title) ?? "Grupė"),
+  color: ITEM_COLOR_KEYS.includes(grp && grp.color) ? grp.color : "none"
+ })) : [];
+ const validGroupIds = new Set(groups.map(grp => grp.id));
+ const copy = {
+  title: (allowEmptyTitle || rawTitle.trim()) ? rawTitle : "Žaidimas",
+  short_description: sanitizeShortDescription(src.short_description),
+  description: sanitizeDescription(src.description),
+  img: sanitizeImgId(src.img),
+  color: COLOR_KEYS.includes(src.color) ? src.color : "blue",
+  groups,
+  cards: Array.isArray(src.cards) ? src.cards.map((c, i) => {
+   const gid = sanitizeId(c && c.groupId, '');
+   return { id: sanitizeId(c && c.id, `c_${i + 1}`), title: String((c && c.title) ?? "Rolė"), groupId: validGroupIds.has(gid) ? gid : "" };
+  }) : [],
+  phases: Array.isArray(src.phases) ? src.phases.map((p, i) => ({
+   id: sanitizeId(p && p.id, `p_${i + 1}`),
+   title: String((p && p.title) ?? "Fazė"),
+   color: ITEM_COLOR_KEYS.includes(p && p.color) ? p.color : "blue",
+   loop: Boolean(p && p.loop),
+   duration: Math.max(0, Number(p && p.duration) || 0),
+   fxAlarm: Boolean(p && p.fxAlarm),
+   winner: Boolean(p && p.winner)
+  })) : [],
+  finals: Array.isArray(src.finals) ? src.finals.map((f, i) => ({
+   id: sanitizeId(f && f.id, `f_${i + 1}`),
+   title: String((f && f.title) ?? "Baigtis"),
+   color: ITEM_COLOR_KEYS.includes(f && f.color) ? f.color : "emerald"
+  })) : []
+ };
  sortCardsByGroups(copy);
- copy.phases = Array.isArray(copy.phases) ? copy.phases.map((p, i) => ({ id: p.id || `p_${i + 1}`, title: p.title ?? "Fazė", color: ITEM_COLOR_KEYS.includes(p.color) ? p.color : "blue", loop: Boolean(p.loop), duration: Math.max(0, Number(p.duration) || 0), fxAlarm: Boolean(p.fxAlarm), winner: Boolean(p.winner) })) : [];
- copy.finals = Array.isArray(copy.finals) ? copy.finals.map((f, i) => ({ id: f.id || `f_${i + 1}`, title: f.title ?? "Baigtis", color: ITEM_COLOR_KEYS.includes(f.color) ? f.color : "emerald" })) : [];
- if (g && g._recentTs) copy._recentTs = Number(g._recentTs) || Date.now();
+ if (src._recentTs) copy._recentTs = Number(src._recentTs) || Date.now();
  copy.hash = computeCanonicalHash(copy);
  return copy;
 }
@@ -487,10 +514,14 @@ function positionalArrayToGame(arr) {
 
 async function runCompressionPipeline(inputBytes, transformStream) {
  const writer = transformStream.writable.getWriter();
- writer.write(inputBytes); writer.close();
+ const writeDone = writer.write(inputBytes).then(() => writer.close()).catch(() => {});
  const reader = transformStream.readable.getReader();
  const chunks = []; let totalLen = 0;
- while (true) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); totalLen += value.byteLength; }
+ try {
+  while (true) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); totalLen += value.byteLength; }
+ } finally {
+  await writeDone;
+ }
  const out = new Uint8Array(totalLen); let offset = 0;
  for (const ch of chunks) { out.set(ch, offset); offset += ch.byteLength; }
  return out;
@@ -618,9 +649,10 @@ const PLAY_AUDIO_SCREENS = new Set(['DEAL', 'DEAL_DONE', 'PHASE', 'FINAL']);
 function isPlayAudioAllowed() { return PLAY_AUDIO_SCREENS.has(state.screen) && !SoundEngine.muted; }
 
 const SoundEngine = {
- ctx: null, muted: false, keepAliveOsc: null, keepAliveGain: null, sirenInterval: null, sirenOsc: null, sirenGain: null,
+ ctx: null, muted: false, suspendTimer: null, keepAliveOsc: null, keepAliveGain: null, sirenInterval: null, sirenOsc: null, sirenGain: null,
  ensureContext() {
  if (!isPlayAudioAllowed()) return null;
+ if (this.suspendTimer) { clearTimeout(this.suspendTimer); this.suspendTimer = null; }
  if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (_) {} }
  const AudioCtx = window.AudioContext || window.webkitAudioContext; if (!AudioCtx) return null;
  if (!this.ctx || this.ctx.state === 'closed') { try { this.ctx = new AudioCtx(); } catch (_) { return null; } }
@@ -629,8 +661,11 @@ const SoundEngine = {
  },
  unlock() {
  if (!isPlayAudioAllowed()) return;
+ if (this.ctx && this.ctx.state === 'running') {
+  if (this.suspendTimer) { clearTimeout(this.suspendTimer); this.suspendTimer = null; }
+  return;
+ }
  const ctx = this.ensureContext(); if (!ctx) return;
- if (ctx.state !== 'running') { try { ctx.resume().catch(() => {}); } catch (_) {} }
  try { const buf = ctx.createBuffer(1, 1, 22050); const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination); src.onended = () => { try { src.disconnect(); } catch (_) {} }; src.start(0); } catch (_) {}
  },
  startKeepAlive() {
@@ -648,15 +683,22 @@ const SoundEngine = {
  if (this.keepAliveOsc) { try { this.keepAliveOsc.stop(); this.keepAliveOsc.disconnect(); } catch (_) {} this.keepAliveOsc = null; }
  if (this.keepAliveGain) { try { this.keepAliveGain.disconnect(); } catch (_) {} this.keepAliveGain = null; }
  },
- releaseAudioSession() {
+ releaseAudioSession(delayMs = 0) {
  this.stopSiren();
  this.stopKeepAlive();
- if (this.ctx) {
-  try {
-   if (this.ctx.state === 'running' && typeof this.ctx.suspend === 'function') this.ctx.suspend().catch(() => {});
-  } catch (_) {}
- }
- if ('audioSession' in navigator) { try { navigator.audioSession.type = 'auto'; } catch (_) {} }
+ if (this.suspendTimer) { clearTimeout(this.suspendTimer); this.suspendTimer = null; }
+ const doSuspend = () => {
+  this.suspendTimer = null;
+  if (isPlayAudioAllowed()) return;
+  if (this.ctx) {
+   try {
+    if (this.ctx.state === 'running' && typeof this.ctx.suspend === 'function') this.ctx.suspend().catch(() => {});
+   } catch (_) {}
+  }
+  if ('audioSession' in navigator) { try { navigator.audioSession.type = 'auto'; } catch (_) {} }
+ };
+ if (delayMs > 0) this.suspendTimer = setTimeout(doSuspend, delayMs);
+ else doSuspend();
  },
  _playTone(freqStart, freqEnd, duration, type = 'triangle', peakGain = 0.28, delay = 0) {
  if (!isPlayAudioAllowed() || this.muted) return;
@@ -679,7 +721,8 @@ const SoundEngine = {
  } else if (PLAY_AUDIO_SCREENS.has(state.screen)) {
   this.unlock();
   if (['DEAL', 'PHASE'].includes(state.screen)) this.startKeepAlive();
-  this.playCardFlip(true);
+  if (state.screen === 'PHASE' && state.alarmActive) this.startSiren();
+  else this.playCardFlip(true);
  }
  render();
  },
@@ -720,15 +763,16 @@ const SoundEngine = {
 ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(evt => window.addEventListener(evt, () => { if (isPlayAudioAllowed()) SoundEngine.unlock(); }, { passive: true }));
 
 let PUBLIC_GAMES = [];
+let publicCatalogPromise = null;
 
 const state = {
- screen: 'HOME', catalogTab: 'pub', locked: false, wakeLock: null, fxStartTimer: null,
+ screen: 'HOME', lastRenderedScreen: null, catalogTab: 'pub', locked: false, lockTimer: null, wakeLock: null, fxStartTimer: null,
  myGames: [], favGames: [], recentGames: [],
  copiedShareHash: null, copiedShareTimer: null,
- currentGameIsPublic: true, publicCatalogError: false,
+ currentGameIsPublic: true,
  baseGame: null,
  customCounts: {},
- editorDraft: null, editingOriginHash: null, editorInitialHash: null,
+ editorDraft: null, editingOriginHash: null, editorInitialHash: null, deletingEditorItem: false,
  imageCatalog: null, imageCatalogLoading: false, imageCatalogError: false, imagePickerOpen: false,
  deck: [], dealIndex: 0, cardFaceUp: false, currentCard: null,
  archiveUploadedOk: false, archiveUploadTimer: null,
@@ -737,23 +781,23 @@ const state = {
 };
 
 async function loadPublicCatalog() {
- try {
- const baseUrl = getApiBaseUrl();
- const res = await fetch(`${baseUrl}/games.json`, { cache: 'no-cache' });
- if (res.ok) {
- const data = await res.json();
- PUBLIC_GAMES = data.map(normalizeGameObject);
- state.publicCatalogError = false;
- if (state.screen === 'HOME') render();
- } else {
- state.publicCatalogError = true;
- if (state.screen === 'HOME') render();
- }
- } catch (e) {
- console.warn('Nepavyko užkrauti viešo katalogo:', e);
- state.publicCatalogError = true;
- if (state.screen === 'HOME') render();
- }
+ if (publicCatalogPromise) return publicCatalogPromise;
+ publicCatalogPromise = (async () => {
+  try {
+   const baseUrl = getApiBaseUrl();
+   const res = await fetch(`${baseUrl}/games.json`, { cache: 'no-cache' });
+   if (res.ok) {
+    const data = await res.json();
+    PUBLIC_GAMES = Array.isArray(data) ? data.map(g => normalizeGameObject(g)) : [];
+   }
+  } catch (e) {
+   console.warn('Nepavyko užkrauti viešo katalogo:', e);
+  } finally {
+   publicCatalogPromise = null;
+   if (state.screen === 'HOME') render();
+  }
+ })();
+ return publicCatalogPromise;
 }
 function retryLoadPublicCatalog() { Haptics.tap(); loadPublicCatalog(); }
 
@@ -843,7 +887,8 @@ function renderImagePickerModal() {
  } else if (!state.imageCatalog || state.imageCatalog.length === 0) {
   bodyHtml = `<div class="image-picker-status"><i class="fa-solid fa-images"></i></div>`;
  } else {
-  const tiles = state.imageCatalog.map((id, idx) => `<div class="image-picker-tile ${currentImg === id ? 'selected' : ''}" onclick="selectGameImageByIndex(${idx}, event)"><img src="${escapeHtml(getImageUrl(id))}" loading="lazy" alt="${escapeHtml(id)}" /></div>`).join('');
+  const fallbackImgUrl = escapeHtml(getImageUrl(''));
+  const tiles = state.imageCatalog.map((id, idx) => `<div class="image-picker-tile ${currentImg === id ? 'selected' : ''}" onclick="selectGameImageByIndex(${idx}, event)"><img src="${escapeHtml(getImageUrl(id))}" loading="lazy" alt="${escapeHtml(id)}" onerror="this.onerror=null; this.src='${fallbackImgUrl}';" /></div>`).join('');
   bodyHtml = `<div class="image-picker-grid">${tiles}</div>`;
  }
  overlay.innerHTML = `<div class="top-bar"><button class="sm" onclick="Haptics.tap(); closeImagePicker(event)"><i class="fa-solid fa-xmark"></i></button><div class="top-actions">${currentImg ? `<button class="sm editor-del-top-btn" onclick="clearGameImageInEditor(event)"><i class="fa-solid fa-trash"></i></button>` : ''}</div></div><div class="image-picker-scroll">${bodyHtml}</div>`;
@@ -860,17 +905,25 @@ async function purgeNonPublicGameFromOtherCaches(hash) {
 }
 
 async function refreshCatalogState() {
- state.myGames = await CacheStore.getAll(CacheStore.MY_CACHE, CacheStore.memMy);
- state.favGames = await CacheStore.getAll(CacheStore.FAV_CACHE, CacheStore.memFav);
- const myHashes = new Set(state.myGames.map(g => g.hash));
- const recentRaw = await CacheStore.getAll(CacheStore.RECENT_CACHE, CacheStore.memRecent);
+ const [myGames, favGames, recentRaw] = await Promise.all([
+  CacheStore.getAll(CacheStore.MY_CACHE, CacheStore.memMy),
+  CacheStore.getAll(CacheStore.FAV_CACHE, CacheStore.memFav),
+  CacheStore.getAll(CacheStore.RECENT_CACHE, CacheStore.memRecent)
+ ]);
+ state.myGames = myGames;
+ state.favGames = favGames;
+ const myHashes = new Set(myGames.map(g => g.hash));
  recentRaw.sort((a, b) => (b._recentTs || 0) - (a._recentTs || 0));
- const recentFiltered = recentRaw.filter(g => !myHashes.has(g.hash));
- if (recentRaw.length > MAX_RECENT_GAMES) {
- const overflow = recentRaw.slice(MAX_RECENT_GAMES);
- for (const oldGame of overflow) await CacheStore.remove(CacheStore.RECENT_CACHE, CacheStore.memRecent, oldGame.hash);
+ const recentKept = [];
+ const recentToRemove = [];
+ for (const g of recentRaw) {
+  if (myHashes.has(g.hash) || recentKept.length >= MAX_RECENT_GAMES) recentToRemove.push(g.hash);
+  else recentKept.push(g);
  }
- state.recentGames = recentFiltered.slice(0, MAX_RECENT_GAMES);
+ if (recentToRemove.length > 0) {
+  await Promise.all(recentToRemove.map(h => CacheStore.remove(CacheStore.RECENT_CACHE, CacheStore.memRecent, h)));
+ }
+ state.recentGames = recentKept;
 }
 
 async function recordRecentGame(gameObj) {
@@ -878,12 +931,6 @@ async function recordRecentGame(gameObj) {
  if (isInMyGames(copy.hash)) return;
  copy._recentTs = Date.now();
  await CacheStore.put(CacheStore.RECENT_CACHE, CacheStore.memRecent, copy);
- const allRecent = await CacheStore.getAll(CacheStore.RECENT_CACHE, CacheStore.memRecent);
- allRecent.sort((a, b) => (b._recentTs || 0) - (a._recentTs || 0));
- if (allRecent.length > MAX_RECENT_GAMES) {
- const overflow = allRecent.slice(MAX_RECENT_GAMES);
- for (const oldGame of overflow) await CacheStore.remove(CacheStore.RECENT_CACHE, CacheStore.memRecent, oldGame.hash);
- }
  await refreshCatalogState();
 }
 
@@ -936,16 +983,27 @@ function handleBrandTap(e) {
  loadPublicCatalog();
 }
 
+function resetPlaySession({ audioReleaseDelayMs = 0 } = {}) {
+ HoldEngine.reset();
+ clearBarrier();
+ stopPhaseTimer();
+ releaseWakeLock();
+ SoundEngine.releaseAudioSession(audioReleaseDelayMs);
+ state.alarmActive = false;
+ state.phasePaused = false;
+ clearAppEffects();
+}
+
 function openSettings() {
- HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
- state.alarmActive = false; state.screen = 'SETTINGS'; document.title = APP_DEFAULT_TITLE;
- clearAppEffects(); setAccent('blue'); render();
+ resetPlaySession();
+ state.screen = 'SETTINGS'; document.title = APP_DEFAULT_TITLE;
+ setAccent('blue'); render();
 }
 
 function goToHome() {
- HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
- state.alarmActive = false; state.screen = 'HOME'; document.title = APP_DEFAULT_TITLE;
- clearAppEffects(); setAccent(CATALOG_TAB_COLORS[state.catalogTab] || 'blue'); render();
+ resetPlaySession();
+ state.screen = 'HOME'; document.title = APP_DEFAULT_TITLE;
+ setAccent(CATALOG_TAB_COLORS[state.catalogTab] || 'blue'); render();
 }
 
 function formatArchiveTimestamp() {
@@ -1036,7 +1094,7 @@ async function openGameSession(gameObj, options = {}) {
 }
 
 function startEditorItemDeleteHold(type, index, e) {
- if (state.screen !== 'EDITOR' || !state.editorDraft) return;
+ if (state.screen !== 'EDITOR' || !state.editorDraft || state.deletingEditorItem) return;
  const itemId = `ed-item-${type}-${index}`; const btnId = `ed-del-${type}-${index}`;
  HoldEngine.start(`ed-del:${type}:${index}`, {
  isDanger: true,
@@ -1054,15 +1112,17 @@ function startEditorItemDeleteHold(type, index, e) {
  if (btn) { btn.style.opacity = ''; btn.style.borderColor = ''; btn.style.color = ''; btn.style.background = ''; }
  },
  onComplete() {
+ state.deletingEditorItem = true;
  const item = document.getElementById(itemId); if (item) item.classList.add('deleting-item');
  setTimeout(() => {
+ state.deletingEditorItem = false;
  if (state.screen !== 'EDITOR' || !state.editorDraft) return;
  if (type === 'group') {
  const grp = state.editorDraft.groups[index];
  if (grp) { state.editorDraft.groups.splice(index, 1); state.editorDraft.cards.forEach(c => { if (c.groupId === grp.id) c.groupId = ""; }); }
- } else if (type === 'card') state.editorDraft.cards.splice(index, 1);
- else if (type === 'phase') state.editorDraft.phases.splice(index, 1);
- else if (type === 'final') state.editorDraft.finals.splice(index, 1);
+ } else if (type === 'card' && index < state.editorDraft.cards.length) state.editorDraft.cards.splice(index, 1);
+ else if (type === 'phase' && index < state.editorDraft.phases.length) state.editorDraft.phases.splice(index, 1);
+ else if (type === 'final' && index < state.editorDraft.finals.length) state.editorDraft.finals.splice(index, 1);
  updateDraftHashBadge(); render();
  }, 200);
  }
@@ -1079,7 +1139,7 @@ function startEditorDeleteHold(e) {
  if (draftHash && draftHash !== originHash) { await CacheStore.remove(CacheStore.MY_CACHE, CacheStore.memMy, draftHash); await purgeNonPublicGameFromOtherCaches(draftHash); }
  await refreshCatalogState(); state.catalogTab = 'my'; goToHome();
  }
- });
+ }, e);
 }
 
 function startEditorPublishHold(e) {
@@ -1087,7 +1147,7 @@ function startEditorPublishHold(e) {
  key: 'publish:editor', btnId: 'editor-pub-btn', colorCss: 'var(--c-blue)', isDanger: false,
  innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-blue)"><i class="fa-solid fa-cloud-arrow-up"></i></div>`,
  onComplete() {}
- });
+ }, e);
 }
 
 function startAppResetHold(e) {
@@ -1095,20 +1155,25 @@ function startAppResetHold(e) {
   key: 'reset:app', btnId: 'settings-reset-btn', colorCss: 'var(--c-red)', isDanger: true,
   innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-red)"><i class="fa-solid fa-skull"></i></div>`,
   onComplete() {
-   caches.keys().then(keys => keys.forEach(key => caches.delete(key))).catch(()=>{}).finally(() => {
-     localStorage.clear();
-     window.location.href = window.location.href.split('#')[0];
+   const appCaches = [CacheStore.MY_CACHE, CacheStore.FAV_CACHE, CacheStore.RECENT_CACHE];
+   const clearCaches = ('caches' in window) ? Promise.all(appCaches.map(key => caches.delete(key))) : Promise.resolve();
+   clearCaches.catch(() => {}).finally(() => {
+    try {
+     localStorage.removeItem(CacheStore.MY_LS_KEY);
+     localStorage.removeItem(SessionStore.STORAGE_KEY);
+    } catch (_) {}
+    window.location.href = getBaseShareUrl();
    });
   }
- });
+ }, e);
 }
 
 function startCancelHold(e) {
  HoldEngine.startOverlayHold({
  key: 'cancel:session', btnId: 'cancel-hold-btn', colorCss: 'var(--c-red)', isDanger: true,
  innerHtml: `<div class="hold-target hold-symbol-badge" style="--badge-color: var(--c-red)"><i class="fa-solid fa-xmark"></i></div>`,
- onComplete() { SoundEngine.playCardFlip(false); goToPregame(); }
- });
+ onComplete() { SoundEngine.playCardFlip(false); goToPregame({ audioReleaseDelayMs: 140 }); }
+ }, e);
 }
 
 function startFinalHold(idx, e) {
@@ -1122,11 +1187,11 @@ function startFinalHold(idx, e) {
  key: `final:${idx}`, btnId: `final-token-${idx}`, colorCss, isDanger: false, noGlow: true,
  innerHtml: `<div class="hold-target playing-card" style="--card-color: ${colorCss}; --card-text-color: ${textColorCss};"><div style="font-size: 4rem; color: ${textColorCss}; margin-bottom: 14px; text-shadow: 0 4px 16px rgba(0,0,0,0.8);"><i class="fa-solid fa-trophy"></i></div><div class="card-face-title">${escapeHtml(finalObj.title)}</div><div class="return-btn-wrap" style="opacity: 0; transition: opacity 0.15s ease;"><button class="lg" style="--accent: ${colorCss}; color: ${textColorCss}; pointer-events: none;"><i class="fa-solid fa-check"></i></button></div></div>`,
  onComplete() {
- stopPhaseTimer(); SoundEngine.stopSiren(); clearAppEffects(); state.activeFinal = finalObj; state.screen = 'FINAL';
+ stopPhaseTimer(); SoundEngine.stopSiren(); clearAppEffects(); state.alarmActive = false; state.phasePaused = false; state.activeFinal = finalObj; state.screen = 'FINAL';
  setAccent(finalObj.color);
  Haptics.finalWin(); SoundEngine.playFinalFanfare(); render(); triggerBarrier();
  }
- });
+ }, e);
 }
 
 function findGameAnySourceByHash(hash) {
@@ -1187,50 +1252,64 @@ async function shareCurrentGame(e) {
 
 function getCustomDeckSize() { return (state.baseGame.cards || []).reduce((sum, c) => sum + (state.customCounts[c.id] ?? 0), 0); }
 function setAccent(colorKey) { const c = (!colorKey || colorKey === 'none') ? PALETTE.none : (PALETTE[colorKey] || PALETTE.blue); document.documentElement.style.setProperty('--accent', c); }
+function clearBarrier() {
+ if (state.lockTimer) { clearTimeout(state.lockTimer); state.lockTimer = null; }
+ state.locked = false;
+ const app = document.getElementById('app'); if (app) app.classList.remove('locked');
+ const bar = document.getElementById('lock-bar'); if (bar) bar.classList.remove('active');
+}
 function triggerBarrier() {
+ if (state.lockTimer) { clearTimeout(state.lockTimer); state.lockTimer = null; }
  state.locked = true; const app = document.getElementById('app'); const bar = document.getElementById('lock-bar');
  app.classList.add('locked'); bar.classList.remove('active'); void bar.offsetWidth; bar.classList.add('active');
- setTimeout(() => { state.locked = false; app.classList.remove('locked'); }, 600);
+ state.lockTimer = setTimeout(() => { state.lockTimer = null; state.locked = false; app.classList.remove('locked'); }, 600);
 }
 async function requestWakeLock() {
  if ('wakeLock' in navigator && !state.wakeLock) { try { state.wakeLock = await navigator.wakeLock.request('screen'); state.wakeLock.addEventListener('release', () => { state.wakeLock = null; }); } catch (_) {} }
 }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (isPlayAudioAllowed()) SoundEngine.ensureContext(); if (!['HOME', 'SETTINGS', 'PREGAME', 'ROLES', 'EDITOR'].includes(state.screen)) requestWakeLock(); } });
+function releaseWakeLock() {
+ if (state.wakeLock) { const lock = state.wakeLock; state.wakeLock = null; try { lock.release().catch(() => {}); } catch (_) {} }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (isPlayAudioAllowed()) SoundEngine.ensureContext(); if (PLAY_AUDIO_SCREENS.has(state.screen)) requestWakeLock(); } });
 function shuffleArray(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-function goToPregame() {
- HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
- state.alarmActive = false; state.screen = 'PREGAME'; document.title = getGameTitleWithHash(state.baseGame);
- clearAppEffects(); setAccent(state.baseGame.color); render();
+function goToPregame(opts = {}) {
+ resetPlaySession(opts);
+ state.screen = 'PREGAME'; document.title = getGameTitleWithHash(state.baseGame);
+ setAccent(state.baseGame.color); render();
 }
 function goToRoles() {
- HoldEngine.reset(); stopPhaseTimer(); SoundEngine.releaseAudioSession();
- state.alarmActive = false; state.screen = 'ROLES'; document.title = getGameTitleWithHash(state.baseGame);
- clearAppEffects(); setAccent(state.baseGame.color); render();
+ resetPlaySession();
+ state.screen = 'ROLES'; document.title = getGameTitleWithHash(state.baseGame);
+ setAccent(state.baseGame.color); render();
 }
 function adjustCustomCount(cardId, delta) {
- Haptics.tap(); SoundEngine.playCardFlip(true);
+ Haptics.tap();
  const current = state.customCounts[cardId] ?? 0; state.customCounts[cardId] = Math.max(0, current + delta);
  SessionStore.saveForGame(state.baseGame.hash, state.customCounts); render();
 }
 
+function enterEditorWithDraft(draft, originHash) {
+ resetPlaySession();
+ state.editorDraft = draft; state.editingOriginHash = originHash; state.editorInitialHash = draft.hash; state.deletingEditorItem = false;
+ state.screen = 'EDITOR'; document.title = originHash ? getGameTitleWithHash(draft) : APP_DEFAULT_TITLE;
+ setAccent(draft.color); render();
+}
 function openEditorForNew() {
  Haptics.tap();
- const emptyGame = normalizeGameObject({ title: "", short_description: "", description: "", img: "", color: "blue", groups: [], cards: [], phases: [], finals: [] });
- emptyGame.title = "";
- emptyGame.hash = computeCanonicalHash(emptyGame);
- state.editorDraft = emptyGame; state.editingOriginHash = null; state.editorInitialHash = emptyGame.hash; state.screen = 'EDITOR'; setAccent(state.editorDraft.color); render();
+ const emptyGame = normalizeGameObject({ title: "", short_description: "", description: "", img: "", color: "blue", groups: [], cards: [], phases: [], finals: [] }, { allowEmptyTitle: true });
+ enterEditorWithDraft(emptyGame, null);
  const titleInput = document.getElementById('editor-title-input');
  if (titleInput) titleInput.focus();
 }
 function openEditorByHash(hash, e) {
  if (e) e.stopPropagation(); const target = state.myGames.find(g => g.hash === hash); if (!target) return;
- Haptics.tap(); state.editorDraft = normalizeGameObject(target); state.editingOriginHash = target.hash; state.editorInitialHash = state.editorDraft.hash; state.screen = 'EDITOR'; setAccent(state.editorDraft.color); render();
+ Haptics.tap(); enterEditorWithDraft(normalizeGameObject(target), target.hash);
 }
 async function openEditorFromPregame() {
  Haptics.tap(); let targetGame = state.baseGame;
  if (!isInMyGames(state.baseGame.hash)) { if (!state.currentGameIsPublic) return; targetGame = await CacheStore.put(CacheStore.MY_CACHE, CacheStore.memMy, state.baseGame); await refreshCatalogState(); }
- state.editorDraft = normalizeGameObject(targetGame); state.editingOriginHash = targetGame.hash; state.editorInitialHash = state.editorDraft.hash; state.screen = 'EDITOR'; setAccent(state.editorDraft.color); render();
+ enterEditorWithDraft(normalizeGameObject(targetGame), targetGame.hash);
 }
 function addGroupInEditor(e) { if (e) e.stopPropagation(); if (!state.editorDraft) return; Haptics.tap(); state.editorDraft.groups.push({ id: uid('g'), title: 'Nauja grupė', color: 'blue' }); updateDraftHashBadge(); render(); }
 function addCardInEditor(e) {
@@ -1342,6 +1421,7 @@ function togglePhaseTimerPause() {
   state.phasePaused = false;
   startPhaseTimer(state.phaseDurationSec);
  }
+ renderTimerOnly();
 }
 function startPhaseTimer(durationSec) {
  stopPhaseTimer();
@@ -1383,7 +1463,7 @@ function getNextPhaseIndex() {
  else { for (let i = state.phaseIndex + 1; i < phases.length; i++) { if (phases[i].loop) return i; } for (let i = 0; i <= state.phaseIndex; i++) { if (phases[i].loop) return i; } return -1; }
 }
 function nextPhase() { SoundEngine.unlock(); const phases = state.baseGame.phases || []; if (state.firstLap && state.phaseIndex + 1 >= phases.length) state.firstLap = false; const nextIdx = getNextPhaseIndex(); if (nextIdx !== -1) { state.phaseIndex = nextIdx; loadCurrentPhase(); } }
-function closeFinalCard() { if (state.locked) return; Haptics.tap(); SoundEngine.playCardFlip(false); goToPregame(); }
+function closeFinalCard() { if (state.locked) return; Haptics.tap(); SoundEngine.playCardFlip(false); goToPregame({ audioReleaseDelayMs: 140 }); }
 function clearAppEffects() { if (state.fxStartTimer) { clearTimeout(state.fxStartTimer); state.fxStartTimer = null; } const app = document.getElementById('app'); app.classList.remove('fx-start', 'fx-end', 'fx-alarm'); }
 function formatTime(sec) { const m = String(Math.floor(sec / 60)).padStart(2, '0'); const s = String(sec % 60).padStart(2, '0'); return `${m}:${s}`; }
 function escapeHtml(str) { return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -1435,6 +1515,7 @@ function renderTimerOnly() {
  if (!el) { render(); return; }
  const tv = getPhaseTimerView();
  el.textContent = tv.text;
+ el.classList.toggle('timer-paused', state.phasePaused);
  el.classList.toggle('timer-blink', tv.isBlinking);
  el.classList.toggle('timer-overdue', tv.isOverdue);
  if (nextBtn) {
@@ -1447,10 +1528,11 @@ function openGameByHashFromList(hash, options = {}) { Haptics.tap(); const g = f
 
 function renderBrandHeader({ isSettings = false } = {}) {
  const homeUrl = escapeHtml(getBaseShareUrl());
+ const logoUrl = escapeHtml(`${getApiBaseUrl()}/f/favicon-96x96.png`);
  const rightBtn = isSettings
   ? `<button class="sm" onclick="Haptics.tap(); goToHome()" aria-label="Uždaryti"><i class="fa-solid fa-xmark"></i></button>`
   : `<button class="sm" onclick="openSettings()" aria-label="Nustatymai"><i class="fa-solid fa-gear"></i></button>`;
- return `<div class="top-bar catalog-brand-bar"><a href="${homeUrl}" class="catalog-brand-link" onclick="handleBrandTap(event)"><img src="https://mruslys.github.io/C4RDx5/f/favicon-96x96.png" alt="" class="catalog-brand-logo" /><span class="catalog-brand-name">C4RD<span class="brand-accent">x5</span></span></a><div class="top-actions">${rightBtn}</div></div>`;
+ return `<div class="top-bar catalog-brand-bar"><a href="${homeUrl}" class="catalog-brand-link" onclick="handleBrandTap(event)"><img src="${logoUrl}" alt="" class="catalog-brand-logo" /><span class="catalog-brand-name">C4RD<span class="brand-accent">x5</span></span></a><div class="top-actions">${rightBtn}</div></div>`;
 }
 
 function renderCatalogCard(g, { mode = 'fav', forceStarActive = false, extraOptions = null } = {}) {
@@ -1588,7 +1670,7 @@ function renderPhase(app) {
  const showFinals = Boolean(currentPhase && currentPhase.winner && state.baseGame.finals && state.baseGame.finals.length > 0);
  const alarmHtml = showAlarm ? `<button class="danger ${state.alarmActive ? 'active-alarm' : ''}" onclick="triggerAlarm()"><i class="fa-solid fa-bullhorn"></i></button>` : '';
  const finalsHtml = showFinals ? `<div class="finals-tray">${state.baseGame.finals.map((f, idx) => `<button id="final-token-${idx}" class="final-token ${HoldEngine.activeKey === 'final:' + idx && HoldEngine.isHolding ? 'holding' : ''}" style="--token-color: ${getColorCss(f.color, 'var(--text)')}" oncontextmenu="return false;" onpointerdown="startFinalHold(${idx}, event)"><i class="fa-solid fa-trophy"></i></button>`).join('')}</div>` : '';
- app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()" aria-label="Garsas"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-spacer-top"></div><div class="phase-core"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${tv.isBlinking ? 'timer-blink' : ''} ${tv.isOverdue ? 'timer-overdue' : ''}" onclick="togglePhaseTimerPause()">${tv.text}</div></div><div class="phase-aux"><div class="phase-aux-slot">${alarmHtml}</div><div class="phase-aux-slot">${finalsHtml}</div></div></div><div class="bottom-bar"><div class="action-row">${canAdvance ? `<button id="next-phase-btn" class="${tv.isExpired ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid ${tv.nextIcon}"></i></button>` : ''}</div></div>`;
+ app.innerHTML = `<div class="top-bar"><button id="cancel-hold-btn" class="sm hold-btn" style="--hold-color: var(--c-red)" oncontextmenu="return false;" onpointerdown="startCancelHold(event)"><i class="fa-solid fa-xmark"></i></button><button class="sm" onclick="SoundEngine.toggleMute()" aria-label="Garsas"><i class="fa-solid ${SoundEngine.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i></button></div><div class="phase-stage"><div class="phase-spacer-top"></div><div class="phase-core"><div class="phase-title">${escapeHtml(title)}</div><div id="timer-val" class="timer-display ${state.phasePaused ? 'timer-paused' : ''} ${tv.isBlinking ? 'timer-blink' : ''} ${tv.isOverdue ? 'timer-overdue' : ''}" onclick="togglePhaseTimerPause()">${tv.text}</div></div><div class="phase-aux"><div class="phase-aux-slot">${alarmHtml}</div><div class="phase-aux-slot">${finalsHtml}</div></div></div><div class="bottom-bar"><div class="action-row">${canAdvance ? `<button id="next-phase-btn" class="${tv.isExpired ? 'pulse-btn' : ''}" onclick="nextPhase()"><i class="fa-solid ${tv.nextIcon}"></i></button>` : ''}</div></div>`;
 }
 
 function renderFinal(app) {
@@ -1603,12 +1685,13 @@ function renderSettings(app) {
 function render() {
  if (state.screen !== 'EDITOR' && state.imagePickerOpen) closeImagePicker();
  const isHome = state.screen === 'HOME';
+ const sameScreen = state.lastRenderedScreen === state.screen;
  document.documentElement.classList.toggle('home-scroll', isHome);
  const app = document.getElementById('app');
- const savedEditorScroll = (app.querySelector('.editor-scroll') || {}).scrollTop || 0;
- const savedPregameScroll = (app.querySelector('.pregame-scroll') || {}).scrollTop || 0;
- const savedRolesScroll = (app.querySelector('.roles-scroll') || {}).scrollTop || 0;
- const savedCatalogScroll = window.scrollY || document.documentElement.scrollTop || 0;
+ const savedEditorScroll = sameScreen ? ((app.querySelector('.editor-scroll') || {}).scrollTop || 0) : 0;
+ const savedPregameScroll = sameScreen ? ((app.querySelector('.pregame-scroll') || {}).scrollTop || 0) : 0;
+ const savedRolesScroll = sameScreen ? ((app.querySelector('.roles-scroll') || {}).scrollTop || 0) : 0;
+ const savedCatalogScroll = sameScreen ? (window.scrollY || document.documentElement.scrollTop || 0) : 0;
 
  if (isHome) renderHome(app, savedCatalogScroll);
  else if (state.screen === 'SETTINGS') renderSettings(app);
@@ -1619,6 +1702,7 @@ function render() {
  else if (state.screen === 'DEAL_DONE') renderDealDone(app);
  else if (state.screen === 'PHASE') renderPhase(app);
  else if (state.screen === 'FINAL') renderFinal(app);
+ state.lastRenderedScreen = state.screen;
 }
 
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && state.imagePickerOpen) closeImagePicker(); });
